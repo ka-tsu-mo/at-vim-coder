@@ -9,7 +9,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " let s:at_vim_coder_base_dir = expand('%:p:h')
-let s:at_vim_coder_base_dir = expand('<sfile>:p:h')
+let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/src/at_vim_coder.py
 py3 avc = AtVimCoder()

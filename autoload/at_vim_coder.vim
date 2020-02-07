@@ -8,7 +8,6 @@ let g:loaded_at_vim_coder = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-" let s:at_vim_coder_base_dir = expand('%:p:h')
 let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/src/at_vim_coder.py
@@ -28,7 +27,7 @@ function! at_vim_coder#echo_login_status()
 	endif
 endfunction
 
-function! at_vim_coder#get_user_info()
+function! at_vim_coder#get_user_info() abort
 	call inputsave()
 	let l:username = input('username: ', '')
 	call inputrestore()
@@ -55,7 +54,13 @@ function! at_vim_coder#login()
 endfunction
 
 function! at_vim_coder#delete_cookie()
-	py3 avc.delete_cookies()
+	l:logged_in = avc.check_login()
+	if l:logged_in
+		py3 avc.delete_cookies()
+		echo '[at-vim-coder] Deleted local Cookie'
+	else
+		echo '[at-vim-coder] You already logged-out'
+	endif
 endfunction
 
 function! at_vim_coder#get_tasks()

@@ -13,6 +13,10 @@ let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
 py3file <sfile>:h:h/src/at_vim_coder.py
 py3 avc = AtVimCoder()
 
+function! at_vim_coder#echo_message(msg)
+	echo '[at-vim-coder] ' . a:msg
+endfunction
+
 function! at_vim_coder#check_login()
 	py3 avc.check_login()
 	return l:logged_in
@@ -21,13 +25,13 @@ endfunction
 function! at_vim_coder#echo_login_status()
 	let l:logged_in = at_vim_coder#check_login()
 	if !l:logged_in
-		echo 'not logged in'
+		call at_vim_coder#echo_message('Not logged in')
 	elseif l:logged_in
-		echo 'already logged in'
+		call at_vim_coder#echo_message('Already logged in')
 	endif
 endfunction
 
-function! at_vim_coder#get_user_info() abort
+function! at_vim_coder#get_user_info()
 	call inputsave()
 	let l:username = input('username: ', '')
 	call inputrestore()
@@ -44,22 +48,22 @@ function! at_vim_coder#login()
 		let l:user_info = at_vim_coder#get_user_info()
 		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'))
 		if l:login_result
-			echo 'succeeded to log-in'
+			call at_vim_coder#echo_message('Succeeded to log-in')
 		elseif !l:login_result
-			echo 'failed to log-in'
+			call at_vim_coder#echo_message('Failed to log-in')
 		endif
 	elseif l:logged_in
-		echo 'already logged in'
+			call at_vim_coder#echo_message('Already logged in')
 	endif
 endfunction
 
 function! at_vim_coder#delete_cookie()
-	l:logged_in = avc.check_login()
+	let l:logged_in = at_vim_coder#check_login()
 	if l:logged_in
 		py3 avc.delete_cookies()
-		echo '[at-vim-coder] Deleted local Cookie'
+		call at_vim_coder#echo_message('Deleted local Cookie')
 	else
-		echo '[at-vim-coder] You already logged-out'
+		call at_vim_coder#echo_message('You already logged-out')
 	endif
 endfunction
 
@@ -69,12 +73,12 @@ function! at_vim_coder#get_tasks()
 	call inputrestore()
 	redraw
 	if l:contest_id == ''
-		echo 'Cancelled'
+		call at_vim_coder#echo_message('Cancelled')
 		return
 	endif
 	py3 avc.get_tasks(vim.eval('l:contest_id'))
 	if !l:contest_exist
-		echo 'Contest was not found'
+		call at_vim_coder#echo_message('Contest was not found')
 		return
 	else
 		let l:wnr = bufwinnr('task_list')

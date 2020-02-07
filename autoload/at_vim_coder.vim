@@ -10,7 +10,7 @@ set cpo&vim
 
 let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
 
-py3file <sfile>:h:h/src/at_vim_coder.py
+py3file <sfile>:h:h/py/at_vim_coder.py
 py3 avc = AtVimCoder()
 
 function! s:echo_message(msg)

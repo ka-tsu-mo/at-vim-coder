@@ -13,10 +13,6 @@ let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
 py3file <sfile>:h:h/py/at_vim_coder.py
 py3 avc = AtVimCoder()
 
-function! s:echo_message(msg)
-	echo '[at-vim-coder] ' . a:msg
-endfunction
-
 function! at_vim_coder#check_login()
 	py3 avc.check_login()
 	return l:logged_in
@@ -25,9 +21,9 @@ endfunction
 function! at_vim_coder#echo_login_status()
 	let l:logged_in = at_vim_coder#check_login()
 	if !l:logged_in
-		call s:echo_message('Not logged in')
+		call at_vim_coder#utils#echo_message('Not logged in')
 	elseif l:logged_in
-		call s:echo_message('Already logged in')
+		call at_vim_coder#utils#echo_message('Already logged in')
 	endif
 endfunction
 
@@ -48,12 +44,12 @@ function! at_vim_coder#login()
 		let l:user_info = s:get_user_info()
 		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'))
 		if l:login_result
-			call s:echo_message('Succeeded to log-in')
+			call at_vim_coder#utils#echo_message('Succeeded to log-in')
 		elseif !l:login_result
-			call s:echo_message('Failed to log-in')
+			call at_vim_coder#utils#echo_message('Failed to log-in')
 		endif
 	elseif l:logged_in
-			call s:echo_message('Already logged in')
+			call at_vim_coder#utils#echo_message('Already logged in')
 	endif
 endfunction
 
@@ -61,9 +57,9 @@ function! at_vim_coder#delete_cookie()
 	let l:logged_in = at_vim_coder#check_login()
 	if l:logged_in
 		py3 avc.delete_cookies()
-		call s:echo_message('Deleted local Cookie')
+		call at_vim_coder#utils#echo_message('Deleted local Cookie')
 	else
-		call s:echo_message('You already logged-out')
+		call at_vim_coder#utils#echo_message('You already logged-out')
 	endif
 endfunction
 

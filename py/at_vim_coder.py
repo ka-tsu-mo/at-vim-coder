@@ -52,7 +52,7 @@ class AtVimCoder:
 		else:
 			vim.command('let l:logged_in = 1')
 
-	def get_tasks(self, contest_id):
+	def download_tasks(self, contest_id):
 		url = 'https://atcoder.jp/contests/' + contest_id + '/tasks'
 		response = self._session.get(url)
 		if response.status_code == 404:
@@ -60,12 +60,12 @@ class AtVimCoder:
 			return
 		bs_contest_resp = BeautifulSoup(response.text, 'html.parser')
 		task_table = bs_contest_resp.tbody.findAll('tr')
-		tasks = {}
+		self.contest_id = contest_id
+		self.tasks = {}
 		for task in task_table:
 			task_info = task.findAll('td')
 			task_id = task_info[0].text
 			task_title = task_info[1].text
 			task_url = task_info[1].a.get("href")
-			tasks[task_id] = [task_title, task_url]
-		vim.command(f'let s:tasks = {tasks}')
+			self.tasks[task_id] = [task_title, task_url]
 		vim.command('let l:contest_exist = 1')

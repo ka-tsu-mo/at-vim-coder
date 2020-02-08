@@ -76,32 +76,12 @@ function! at_vim_coder#get_tasks()
 		call s:echo_message('Cancelled')
 		return
 	endif
-	py3 avc.get_tasks(vim.eval('l:contest_id'))
+	py3 avc.download_tasks(vim.eval('l:contest_id'))
 	if !l:contest_exist
 		call s:echo_message('Contest was not found')
-		return
 	else
-		let l:wnr = bufwinnr('task_list')
-		if l:wnr > 0
-			execute wnr . 'wincmd w'
-			setlocal modifiable
-			%d
-		else
-			vnew task_list
-			nmap <buffer> <CR> <Plug>avc_select
-			setlocal modifiable
-			%d
-		endif
-		for task_id in keys(s:tasks)
-			call append(line('$'), task_id . ": " . s:tasks[task_id][0])
-		endfor
-		0d
+		call at_vim_coder#buffer#display_list()
 	endif
-	setlocal nomodifiable
-endfunction
-
-function! at_vim_coder#select_task()
-	echo getline('.')[0]
 endfunction
 
 let &cpo = s:save_cpo

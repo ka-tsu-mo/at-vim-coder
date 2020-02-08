@@ -4,7 +4,8 @@ import pickle
 import os
 import vim
 
-AT_CODER_LOGIN_URL = 'https://atcoder.jp/login/'
+AT_CODER_BASE_URL = 'https://atcoder.jp'
+AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 
 class AtVimCoder:
 	def __init__(self):
@@ -45,15 +46,15 @@ class AtVimCoder:
 			vim.command('let l:login_result = 0')
 
 	def check_login(self):
-		url = 'https://atcoder.jp/settings/'
+		url = AT_CODER_BASE_URL + '/settings'
 		response = self._session.get(url, allow_redirects=False)
 		if response.status_code == 302:
 			vim.command('let l:logged_in = 0')
 		else:
 			vim.command('let l:logged_in = 1')
 
-	def download_tasks(self, contest_id):
-		url = 'https://atcoder.jp/contests/' + contest_id + '/tasks'
+	def download_task_list(self, contest_id):
+		url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
 		response = self._session.get(url)
 		if response.status_code == 404:
 			vim.command('let l:contest_exist = 0')
@@ -69,3 +70,9 @@ class AtVimCoder:
 			task_url = task_info[1].a.get("href")
 			self.tasks[task_id] = [task_title, task_url]
 		vim.command('let l:contest_exist = 1')
+
+	def download_task(self, task_id):
+		url = AT_CODER_BASE_URL + self.tasks[task_id][1]
+		response = self._session.get(url)
+		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
+		print(bs_task_soup.findAll('section'))

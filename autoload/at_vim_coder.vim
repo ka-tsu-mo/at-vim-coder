@@ -67,7 +67,7 @@ function! at_vim_coder#delete_cookie()
 	endif
 endfunction
 
-function! at_vim_coder#get_tasks()
+function! at_vim_coder#get_task_list()
 	call inputsave()
 	let l:contest_id = input('contest ID: ', '')
 	call inputrestore()
@@ -76,7 +76,7 @@ function! at_vim_coder#get_tasks()
 		call s:echo_message('Cancelled')
 		return
 	endif
-	py3 avc.download_tasks(vim.eval('l:contest_id'))
+	py3 avc.download_task_list(vim.eval('l:contest_id'))
 	if !l:contest_exist
 		call s:echo_message('Contest was not found')
 	else

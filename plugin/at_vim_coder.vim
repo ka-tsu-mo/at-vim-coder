@@ -30,7 +30,5 @@ function! s:At_Vim_Coder(...)
 	endif
 endfunction
 
-nnoremap <silent> <Plug>avc_select :<C-u>call at_vim_coder#select_task()<CR>
-
 let &cpo = s:save_cpo
 unlet s:save_cpo

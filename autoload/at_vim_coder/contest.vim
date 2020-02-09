@@ -2,7 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! at_vim_coder#contest#get_task_list(contest_id)
-	py3 avc.download_task_list(vim.eval('a:contest_id'))
+	py3 avc.get_task_list(vim.eval('a:contest_id'))
 	return l:contest_exist
 endfunction
 

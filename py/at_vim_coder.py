@@ -54,23 +54,30 @@ class AtVimCoder:
 		else:
 			vim.command('let l:logged_in = 1')
 
-	def download_task_list(self, contest_id):
+	def get_task_list(self, contest_id):
+		bs_contest_resp = self._download_task_list(contest_id)
+		if bs_contest_resp == None:
+			vim.command('let l:contest_exist = 0')
+		else:
+			task_table = bs_contest_resp.tbody.findAll('tr')
+			self.contest_id = contest_id
+			self.tasks = {}
+			for task in task_table:
+				task_info = task.findAll('td')
+				task_id = task_info[0].text
+				task_title = task_info[1].text
+				task_url = task_info[1].a.get("href")
+				self.tasks[task_id] = [task_title, task_url]
+			vim.command('let l:contest_exist = 1')
+
+
+	def _download_task_list(self, contest_id):
 		url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
 		response = self._session.get(url)
 		if response.status_code == 404:
-			vim.command('let l:contest_exist = 0')
-			return
-		bs_contest_resp = BeautifulSoup(response.text, 'html.parser')
-		task_table = bs_contest_resp.tbody.findAll('tr')
-		self.contest_id = contest_id
-		self.tasks = {}
-		for task in task_table:
-			task_info = task.findAll('td')
-			task_id = task_info[0].text
-			task_title = task_info[1].text
-			task_url = task_info[1].a.get("href")
-			self.tasks[task_id] = [task_title, task_url]
-		vim.command('let l:contest_exist = 1')
+			return None
+		else:
+			return BeautifulSoup(response.text, 'html.parser')
 
 	def download_task(self, task_id):
 		url = AT_CODER_BASE_URL + self.tasks[task_id][1]

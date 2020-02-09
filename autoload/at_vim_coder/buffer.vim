@@ -17,6 +17,19 @@ function! s:init_task_list_buffer()
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#buffer#display_task()<CR>
 endfunction
 
+function! s:set_buffer_local_config()
+	setlocal readonly
+	setlocal nobuflisted
+	setlocal nomodifiable
+	setlocal nomodified
+endfunction
+
+function! s:unset_buffer_local_config()
+	setlocal noreadonly
+	setlocal buflisted
+	setlocal modifiable
+endfunction
+
 function! at_vim_coder#buffer#display_task() abort
 	let task_id = s:get_task_id()
 	let win_num = bufwinnr('problem')
@@ -28,35 +41,25 @@ function! at_vim_coder#buffer#display_task() abort
 	endif
 	py3 avc.get_task(vim.eval('task_id'))
 	let task = py3eval('avc.task')
-	setlocal noreadonly
-	setlocal buflisted
-	setlocal modifiable
+	call s:unset_buffer_local_config()
 	silent %d " Clear buffer
 	for tas in task
 		call append(line('$'), tas)
 	endfor
-	setlocal readonly
-	setlocal nobuflisted
-	setlocal nomodifiable
-	setlocal nomodified
+	call s:set_buffer_local_config()
 endfunction
 
 function! at_vim_coder#buffer#display_task_list() abort
 	call s:init_task_list_buffer()
 	let tasks = py3eval('avc.tasks')
-	setlocal noreadonly
-	setlocal buflisted
-	setlocal modifiable
+	call s:unset_buffer_local_config()
 	silent %d " Clear buffer
 	call append(0, py3eval('avc.contest_id'))
 	silent 2d
 	for task_id in keys(tasks)
 		call append(line('$'), task_id . ': ' . tasks[task_id][0])
 	endfor
-	setlocal readonly
-	setlocal nobuflisted
-	setlocal nomodifiable
-	setlocal nomodified
+	call s:set_buffer_local_config()
 endfunction
 
 let &cpo = s:save_cpo

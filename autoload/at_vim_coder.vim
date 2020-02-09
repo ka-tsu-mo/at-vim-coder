@@ -76,7 +76,7 @@ function! at_vim_coder#participate(contest_id)
 			call at_vim_coder#login()
 		endif
 	endif
-	call at_vim_coder#buffer#display_list()
+	call at_vim_coder#buffer#display_task_list()
 endfunction
 
 let &cpo = s:save_cpo

@@ -81,8 +81,12 @@ class AtVimCoder:
 
 	def get_task(self, task_id):
 		sections = self._download_task(task_id)
-		task = self._get_problem_and_constraints(sections)
-		print(task)
+		self.raw_task = self._get_raw_task(sections)
+		self.task = []
+		for part in self.raw_task:
+			part.h3.extract()
+			self.task.append(part.text)
+
 
 	def _download_task(self, task_id):
 		url = AT_CODER_BASE_URL + self.tasks[task_id][1]
@@ -90,7 +94,7 @@ class AtVimCoder:
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
 		return bs_task_soup.findAll('section')
 
-	def _get_problem_and_constraints(self, sections):
+	def _get_raw_task(self, sections):
 		if self._locale[:2] == 'ja':
 			for section in sections:
 				if section.h3.text == '問題文':
@@ -118,4 +122,3 @@ class AtVimCoder:
 					output_section = section
 					break
 		return [problem_section, constraints_section, input_section, output_section]
-

@@ -7,7 +7,7 @@ function! at_vim_coder#contest#get_task_list(contest_id)
 endfunction
 
 function! at_vim_coder#contest#get_task(task_id)
-	py3 avc.download_task(vim.eval('a:task_id'))
+	py3 avc.get_task(vim.eval('a:task_id'))
 	"let task = py3eval('avc.task')
 	"return task
 endfunction

@@ -1,21 +1,15 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! at_vim_coder#contest#get_task_list()
-	call inputsave()
-	let l:contest_id = input('contest ID: ', '')
-	call inputrestore()
-	redraw
-	if l:contest_id == ''
-		call at_vim_coder#utils#echo_message('Cancelled')
-		return
-	endif
-	py3 avc.download_task_list(vim.eval('l:contest_id'))
-	if !l:contest_exist
-		call at_vim_coder#utils#echo_message('Contest was not found')
-	else
-		call at_vim_coder#buffer#display_list()
-	endif
+function! at_vim_coder#contest#get_task_list(contest_id)
+	py3 avc.download_task_list(vim.eval('a:contest_id'))
+	return l:contest_exist
+endfunction
+
+function! at_vim_coder#contest#get_task(task_id)
+	py3 avc.download_task(vim.eval('a:task_id'))
+	"let task = py3eval('avc.task')
+	"return task
 endfunction
 
 let &cpo = s:save_cpo

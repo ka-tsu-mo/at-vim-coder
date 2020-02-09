@@ -11,6 +11,7 @@ class AtVimCoder:
 	def __init__(self):
 		self._session = requests.Session()
 		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_base_dir'), 'cookies')
+		self._locale = vim.eval('$LANG')
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))
@@ -75,4 +76,32 @@ class AtVimCoder:
 		url = AT_CODER_BASE_URL + self.tasks[task_id][1]
 		response = self._session.get(url)
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
-		print(bs_task_soup.findAll('section'))
+		sections = bs_task_soup.findAll('section')
+		self.task = self._get_problem_and_constraints(sections)
+		print(self.task)
+
+	def _get_problem_and_constraints(self, sections):
+		if self._locale[:2] == 'ja':
+			for section in sections:
+				if section.h3.text == '問題文':
+					problem_section = section
+				if section.h3.text == '制約':
+					constraints_section = section
+				if section.h3.text == '入力':
+					input_section = section
+				if section.h3.text == '出力':
+					output_section = section
+					break
+		else:
+			for section in sections:
+				if section.h3.text == 'Problem Statement':
+					problem_section = section
+				if section.h3.text == 'Constraints':
+					constraints_section = section
+				if section.h3.text == 'Input':
+					input_section = section
+				if section.h3.text == 'Output':
+					output_section = section
+					break
+		return [problem_section, constraints_section, input_section, output_section]
+

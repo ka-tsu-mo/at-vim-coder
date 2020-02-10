@@ -10,7 +10,7 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 class AtVimCoder:
 	def __init__(self):
 		self._session = requests.Session()
-		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_base_dir'), 'cookies')
+		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
@@ -57,18 +57,18 @@ class AtVimCoder:
 	def get_task_list(self, contest_id):
 		bs_contest_resp = self._download_task_list(contest_id)
 		if bs_contest_resp == None:
-			vim.command('let l:contest_exist = 0')
+			vim.command('let task_list = {}')
 		else:
 			task_table = bs_contest_resp.tbody.findAll('tr')
 			self.contest_id = contest_id
-			self.tasks = {}
+			tasks = {}
 			for task in task_table:
 				task_info = task.findAll('td')
 				task_id = task_info[0].text
 				task_title = task_info[1].text
 				task_url = task_info[1].a.get("href")
-				self.tasks[task_id] = [task_title, task_url]
-			vim.command('let l:contest_exist = 1')
+				tasks[task_id] = [task_title, task_url]
+			vim.command(f'let task_list = {tasks}')
 
 
 	def _download_task_list(self, contest_id):
@@ -79,46 +79,44 @@ class AtVimCoder:
 		else:
 			return BeautifulSoup(response.text, 'html.parser')
 
-	def get_task(self, task_id):
-		sections = self._download_task(task_id)
-		self.raw_task = self._get_raw_task(sections)
-		self.task = []
-		for part in self.raw_task:
+	def get_task(self, url):
+		sections = self._download_task(url)
+		raw_task = self._get_raw_task(sections)
+		task = []
+		for part in raw_task:
 			part.h3.extract()
-			self.task.append(part.text)
+			task.append(part.text)
+		vim.command(f'let task = {task}')
 
 
-	def _download_task(self, task_id):
-		url = AT_CODER_BASE_URL + self.tasks[task_id][1]
+	def _download_task(self, url):
+		url = AT_CODER_BASE_URL + url
 		response = self._session.get(url)
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
 		return bs_task_soup.findAll('section')
 
 	def _get_raw_task(self, sections):
+		section_list = []
 		if self._locale[:2] == 'ja':
 			for section in sections:
 				if section.h3.text == '問題文':
-					problem_section = section
+					section_list.append(section)
 				if section.h3.text == '制約':
-					constraints_section = section
+					section_list.append(section)
 				if section.h3.text == '入力':
-					input_section = section
+					section_list.append(section)
 				if section.h3.text == '出力':
-					output_section = section
+					section_list.append(section)
 					break
 		else:
 			for section in sections:
 				if section.h3.text == 'Problem Statement':
-					section.h3.decompose()
-					problem_section = section
+					section_list.append(section)
 				if section.h3.text == 'Constraints':
-					section.h3.decompose()
-					constraints_section = section
+					section_list.append(section)
 				if section.h3.text == 'Input':
-					section.h3.decompose()
-					input_section = section
+					section_list.append(section)
 				if section.h3.text == 'Output':
-					section.h3.decompose()
-					output_section = section
+					section_list.append(section)
 					break
-		return [problem_section, constraints_section, input_section, output_section]
+		return section_list

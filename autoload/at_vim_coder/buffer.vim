@@ -2,20 +2,18 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! s:get_task_id()
-	let line = getline('.')
-	if line[1] == ':'
-		return line[0]
-	endif
+	return getline('.')[0]
 endfunction
 
-function! s:init_task_list_buffer()
+function! at_vim_coder#buffer#init_task_list(contest_id, task_list)
 	if tabpagenr('$') == 1 && bufnr('$') == 1 && bufname('%') == ''
-		file avc_task_list
+		execute 'file ' . a:contest_id . '_task_list'
 	else
-		tabnew avc_task_list
+		execute 'tabnew ' . a:contest_id . '_task_list'
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
-	let t:contest_id = py3eval('avc.contest_id')
+	let t:contest_id = a:contest_id
+	let t:task_list = a:task_list
 endfunction
 
 function! s:set_buffer_local_options()
@@ -50,29 +48,26 @@ endfunction
 
 function! at_vim_coder#buffer#display_task() abort
 	let task_id = s:get_task_id()
-	let task = at_vim_coder#contest#get_task(task_id)
-	let win_existed = s:focus_win('problem')
+	let t:task = at_vim_coder#contest#get_task(t:task_list[task_id][1])
+	let win_existed = s:focus_win(t:contest_id . '_problem')
 	if !win_existed
 		wincmd J
 	endif
 	call s:unset_buffer_local_options()
 	silent %d
-	for tas in task
+	for tas in t:task
 		call append(line('$'), tas)
 	endfor
 	call s:set_buffer_local_options()
 endfunction
 
 function! at_vim_coder#buffer#display_task_list() abort
-	call s:init_task_list_buffer()
-	let tasks = py3eval('avc.tasks')
 	call s:unset_buffer_local_options()
 	silent %d
-	call append(0, t:contest_id)
-	silent 2d
-	for task_id in keys(tasks)
-		call append(line('$'), task_id . ': ' . tasks[task_id][0])
+	for task_id in keys(t:task_list)
+		call append(line('$'), task_id . ': ' . t:task_list[task_id][0])
 	endfor
+	0d
 	call s:set_buffer_local_options()
 endfunction
 

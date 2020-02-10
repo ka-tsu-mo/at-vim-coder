@@ -8,7 +8,8 @@ let g:loaded_at_vim_coder = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:at_vim_coder_base_dir = expand('<sfile>:p:h:h')
+let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
+let s:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/py/at_vim_coder.py
 py3 avc = AtVimCoder()
@@ -64,7 +65,12 @@ function! at_vim_coder#delete_cookie()
 endfunction
 
 function! at_vim_coder#participate(contest_id)
-	if !at_vim_coder#contest#get_task_list(a:contest_id)
+	if at_vim_coder#utils#check_workspace(a:contest_id)
+		call at_vim_coder#utils#echo_message('Directory(' . a:contest_id . ') already exists.')
+		return
+	endif
+	let task_list = at_vim_coder#contest#get_task_list(a:contest_id)
+	if empty(task_list)
 		call at_vim_coder#utils#echo_message('Contest was not found')
 		return
 	endif
@@ -76,6 +82,8 @@ function! at_vim_coder#participate(contest_id)
 			call at_vim_coder#login()
 		endif
 	endif
+	call mkdir(at_vim_coder#utils#create_path(g:at_vim_coder_workspace, a:contest_id))
+	call at_vim_coder#buffer#init_task_list(a:contest_id, task_list)
 	call at_vim_coder#buffer#display_task_list()
 endfunction
 

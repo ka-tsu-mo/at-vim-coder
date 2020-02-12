@@ -54,16 +54,21 @@ function! at_vim_coder#buffer#display_task() abort
 		wincmd J
 	endif
 	call s:unset_buffer_local_options()
-	silent %d
-	for tas in t:task
-		call append(line('$'), tas)
+	%d
+	for line in t:task
+		if line[0] == '['
+			call append(line('$'), '')
+		endif
+		call append(line('$'), line)
 	endfor
+	call cursor(0, 0)
+	2d
 	call s:set_buffer_local_options()
 endfunction
 
 function! at_vim_coder#buffer#display_task_list() abort
 	call s:unset_buffer_local_options()
-	silent %d
+	%d
 	for task_id in keys(t:task_list)
 		call append(line('$'), task_id . ': ' . t:task_list[task_id][0])
 	endfor

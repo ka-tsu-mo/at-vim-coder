@@ -12,6 +12,7 @@ let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
 let s:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/py/at_vim_coder.py
+py3file <sfile>:h:h/py/tex_handler.py
 py3 avc = AtVimCoder()
 
 function! s:check_login()

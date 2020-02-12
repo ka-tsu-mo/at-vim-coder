@@ -1,8 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
 import pickle
-import os
 import vim
+import sys
+import os
+sys.path.insert(0, os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'py'))
+import tex_handler
 
 AT_CODER_BASE_URL = 'https://atcoder.jp'
 AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
@@ -11,6 +14,7 @@ class AtVimCoder:
 	def __init__(self):
 		self._session = requests.Session()
 		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'cookies')
+		self._tex_handler = tex_handler.AVC_tex_handler()
 		self._locale = vim.eval('$LANG')
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
@@ -81,13 +85,27 @@ class AtVimCoder:
 
 	def get_task(self, url):
 		sections = self._download_task(url)
-		raw_task = self._get_raw_task(sections)
 		task = []
-		for part in raw_task:
-			part.h3.extract()
-			task.append(part.text)
+		if self._locale[:2] == 'ja':
+			part = ['問題文', '制約', '入力', '出力']
+			for section in sections:
+				if part == []: break
+				if section.h3.text in part:
+					task.append('['+section.h3.text+']')
+					section.h3.decompose()
+					self._tex_handler.replace_var_text(section)
+					lines = [line.strip() for line in section.text.splitlines() if line]
+					task.extend(lines)
+		else:
+			part = ['Problem Statement', 'Constraints', 'Input', 'Output']
+			for section in sections:
+				if section.h3.text in part:
+					task.append('['+section.h3.text+']')
+					section.h3.decompose()
+					self._tex_handler.replace_var_text(section)
+					lines = [line.strip() for line in section.text.splitlines() if line]
+					task.extend(lines)
 		vim.command(f'let task = {task}')
-
 
 	def _download_task(self, url):
 		url = AT_CODER_BASE_URL + url
@@ -95,28 +113,4 @@ class AtVimCoder:
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
 		return bs_task_soup.findAll('section')
 
-	def _get_raw_task(self, sections):
-		section_list = []
-		if self._locale[:2] == 'ja':
-			for section in sections:
-				if section.h3.text == '問題文':
-					section_list.append(section)
-				if section.h3.text == '制約':
-					section_list.append(section)
-				if section.h3.text == '入力':
-					section_list.append(section)
-				if section.h3.text == '出力':
-					section_list.append(section)
-					break
-		else:
-			for section in sections:
-				if section.h3.text == 'Problem Statement':
-					section_list.append(section)
-				if section.h3.text == 'Constraints':
-					section_list.append(section)
-				if section.h3.text == 'Input':
-					section_list.append(section)
-				if section.h3.text == 'Output':
-					section_list.append(section)
-					break
-		return section_list
+Avc = AtVimCoder()

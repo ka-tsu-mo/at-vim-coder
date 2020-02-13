@@ -4,7 +4,6 @@ import pickle
 import vim
 import sys
 import os
-sys.path.insert(0, os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'py'))
 import tex_handler
 
 AT_CODER_BASE_URL = 'https://atcoder.jp'

@@ -11,25 +11,25 @@ class AVC_tex_handler:
 				(re.compile(r'\\pm'), '±'),
 				(re.compile(r'\\div'), '÷'),
 				(re.compile(r'\\times'), '×'),
-				(re.compile(r'\\leq'), '≤'),
 				(re.compile(r'\\leqq'), '≦'),
-				(re.compile(r'\\geq'), '≥'),
+				(re.compile(r'\\leq'), '≤'),
 				(re.compile(r'\\geqq'), '≧'),
+				(re.compile(r'\\geq'), '≥'),
 				(re.compile(r'\\cap'), '∩'),
 				(re.compile(r'\\cup'), '∪'),
-				(re.compile(r'\\subset'), '⊂'),
-				(re.compile(r'\\supset'), '⊃'),
 				(re.compile(r'\\subseteq'), '⊆'),
+				(re.compile(r'\\subset'), '⊂'),
 				(re.compile(r'\\supseteq'), '⊇'),
+				(re.compile(r'\\supset'), '⊃'),
 				(re.compile(r'\\in'), '∈'),
 				(re.compile(r'\\ni'), '∋'),
 				(re.compile(r'\\vee'), '∨'),
 				(re.compile(r'\\\wedge'), '∧'),
-				(re.compile(r'\\bullet'), '⦁'),
-				(re.compile(r'\\cdot'), '∙'),
 				(re.compile(r'\\cdots'), '⋯'),
 				(re.compile(r'\\ldots'), '…'),
 				(re.compile(r'\\vdots'), '⋮'),
+				(re.compile(r'\\cdot'), '∙'),
+				(re.compile(r'\\bullet'), '⦁'),
 				(re.compile(r'\\left'), ''),
 				(re.compile(r'\\right'), ''),
 				(re.compile(r'\\max'), 'max'),
@@ -57,7 +57,7 @@ class AVC_tex_handler:
 			else:
 				if index == 0: numerator = arg.translate(table)
 				if index == 1: denominator = arg.translate(table)
-		return numerator + '/' + denominator
+		return numerator + '∕' + denominator
 
 #tex_handler = AVC_tex_handler()
 #text = r'\frac{n-1}{n}'

@@ -93,6 +93,7 @@ class AtVimCoder:
 					task.append('['+section.h3.text+']')
 					section.h3.decompose()
 					self._tex_handler.replace_var_text(section)
+					self._add_single_quote_to_code_tag(section)
 					lines = [line.strip() for line in section.text.splitlines() if line]
 					task.extend(lines)
 		else:
@@ -111,3 +112,9 @@ class AtVimCoder:
 		response = self._session.get(url)
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
 		return bs_task_soup.findAll('section')
+
+	def _add_single_quote_to_code_tag(self, section):
+		code_tags = section.findAll('code')
+		for code_tag in code_tags:
+			current_text = code_tag.text
+			code_tag.string = '\'' + current_text + '\''

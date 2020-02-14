@@ -1,10 +1,12 @@
 import re
-#import requests
-#from bs4 import BeautifulSoup
 
 class AVC_tex_handler:
 	def __init__(self):
 		self._conv_table = [
+				# todo スペースを後ろに足す
+				# todo <code>にシングルクォーとを加える
+				# \{ → {
+				(re.compile(r'\\frac\{.+\}\{.+\}'), self.frac_to_slash),
 				(re.compile(r'\\sqrt'), '√'),
 				(re.compile(r'\\pm'), '±'),
 				(re.compile(r'\\div'), '÷'),
@@ -44,7 +46,23 @@ class AVC_tex_handler:
 					if tex_expression[0].search(var_tag.text):
 						var_tag.string = tex_expression[0].sub(tex_expression[1], var_tag.text)
 
+	def frac_to_slash(self, matchobj):
+		original_text = matchobj.group(0)
+		args = re.findall(r'\{.+?\}', original_text)
+		table = str.maketrans('{}', '()')
+		for index, arg in enumerate(args):
+			if len(arg) == 3:
+				if index == 0: numerator = arg[1]
+				if index == 1: denominator = arg[1]
+			else:
+				if index == 0: numerator = arg.translate(table)
+				if index == 1: denominator = arg.translate(table)
+		return numerator + '/' + denominator
+
 #tex_handler = AVC_tex_handler()
+#text = r'\frac{n-1}{n}'
+#match = re.match(r'\\frac\{.+\}\{.+\}', text)
+#tex_handler.frac_to_slash(match)
 #response = requests.get('https://atcoder.jp/contests/abc123/tasks/abc123_d')
 #soup = BeautifulSoup(response.text, 'lxml')
 #sections = soup.findAll('section')

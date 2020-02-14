@@ -4,8 +4,9 @@ class AVC_tex_handler:
 	def __init__(self):
 		self._conv_table = [
 				# todo <code>にシングルクォーとを加える
-				# \{ → {
-				(re.compile(r'\\frac\{.+\}\{.+\}'), self.frac_to_slash),
+				(re.compile(r'\\frac\{.+\}\{.+\}'), self._frac_to_slash),
+				(re.compile(r'_\{[0-9aeijoruvx+-=()]+\}|_[0-9aeijoruvx+-=()]'), self._underscore_to_subscript),
+				(re.compile(r'\^\{[0-9aeijoruvx+-=()]+\}|\^[0-9aeijoruvx+-=()]'), self._caret_to_superscript),
 				(re.compile(r'\\sqrt'), '√'),
 				(re.compile(r'\\pm'), '±'),
 				(re.compile(r'\\div'), '÷'),
@@ -37,6 +38,8 @@ class AVC_tex_handler:
 				(re.compile(r'\\}'), '}'),
 				(re.compile(r'\\ '), '')
 				]
+		self._subscript_table = str.maketrans('aeijoruvx0123456789+-=()', 'ₐₑᵢⱼₒᵣᵤᵥₓ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎', '_{}')
+		self._superscript_table = str.maketrans('AaBbDdEeGgHhIiJjKkLlMmNnOoPpRrTtUuVvWwcfsxyz0123456789+-=()', 'ᴬᵃᴮᵇᴰᵈᴱᵉᴳᵍᴴʰᴵⁱᴶʲᴷᵏᴸˡᴹᵐᴺⁿᴼᵒᴾᵖᴿʳᵀᵗᵁᵘⱽᵛᵂʷᶜᶠˢˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾', '^{}')
 		self._exclude_pattern = re.compile(r'^[a-zA-Z0-9(...)\s,+=-]+$')
 
 	def replace_var_text(self, section):
@@ -47,7 +50,7 @@ class AVC_tex_handler:
 					if tex_expression[0].search(var_tag.text):
 						var_tag.string = tex_expression[0].sub(tex_expression[1], var_tag.text)
 
-	def frac_to_slash(self, matchobj):
+	def _frac_to_slash(self, matchobj):
 		original_text = matchobj.group(0)
 		args = re.findall(r'\{.+?\}', original_text)
 		table = str.maketrans('{}', '()')
@@ -58,16 +61,12 @@ class AVC_tex_handler:
 			else:
 				if index == 0: numerator = arg.translate(table)
 				if index == 1: denominator = arg.translate(table)
-		return numerator + '∕' + denominator
+		return numerator + '/' + denominator
 
-#tex_handler = AVC_tex_handler()
-#text = r'\frac{n-1}{n}'
-#match = re.match(r'\\frac\{.+\}\{.+\}', text)
-#tex_handler.frac_to_slash(match)
-#response = requests.get('https://atcoder.jp/contests/abc123/tasks/abc123_d')
-#soup = BeautifulSoup(response.text, 'lxml')
-#sections = soup.findAll('section')
-#for section in sections:
-#	tex_handler.replace_var_text(section)
-#print(sections)
+	def _underscore_to_subscript(self, matchobj):
+		original_text = matchobj.group(0)
+		return original_text.translate(self._subscript_table)
 
+	def _caret_to_superscript(self, matchobj):
+		original_text = matchobj.group(0)
+		return original_text.translate(self._superscript_table)

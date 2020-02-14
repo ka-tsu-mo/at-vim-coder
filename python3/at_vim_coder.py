@@ -111,5 +111,3 @@ class AtVimCoder:
 		response = self._session.get(url)
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
 		return bs_task_soup.findAll('section')
-
-Avc = AtVimCoder()

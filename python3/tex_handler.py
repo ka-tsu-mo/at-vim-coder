@@ -3,7 +3,6 @@ import re
 class AVC_tex_handler:
 	def __init__(self):
 		self._conv_table = [
-				# todo スペースを後ろに足す
 				# todo <code>にシングルクォーとを加える
 				# \{ → {
 				(re.compile(r'\\frac\{.+\}\{.+\}'), self.frac_to_slash),
@@ -34,6 +33,8 @@ class AVC_tex_handler:
 				(re.compile(r'\\right'), ''),
 				(re.compile(r'\\max'), 'max'),
 				(re.compile(r'\\min'), 'min'),
+				(re.compile(r'\\{'), '{'),
+				(re.compile(r'\\}'), '}'),
 				(re.compile(r'\\ '), '')
 				]
 		self._exclude_pattern = re.compile(r'^[a-zA-Z0-9(...)\s,+=-]+$')

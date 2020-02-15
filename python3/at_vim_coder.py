@@ -71,7 +71,7 @@ class AtVimCoder:
 
 	def create_tasks(self, contest_id):
 		bs_contest_resp = self._download_task_list(contest_id)
-		if bs_contest_resp == None:
+		if bs_contest_resp is None:
 			vim.command('let l:created_tasks = {}')
 		else:
 			tasks_table = bs_contest_resp.tbody.findAll('tr')
@@ -139,7 +139,10 @@ class AtVimCoder:
 			span = bs_task_soup.find('span', attrs={'class': 'lang-ja'})
 		else:
 			span = bs_task_soup.find('span', attrs={'class': 'lang-en'})
-		return span.findAll('section')
+		if span is None:
+			return bs_task_soup.findAll('section')
+		else:
+			return span.findAll('section')
 
 	def _add_single_quote_to_code_tag(self, section):
 		code_tags = section.findAll('code')

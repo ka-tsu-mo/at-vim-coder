@@ -1,14 +1,9 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! at_vim_coder#contest#get_task_list(contest_id)
-	py3 avc.get_task_list(vim.eval('a:contest_id'))
-	return task_list
-endfunction
-
-function! at_vim_coder#contest#get_task(task_id)
-	py3 avc.get_task(vim.eval('a:task_id'))
-	return task
+function! at_vim_coder#contest#create_tasks(contest_id)
+	py3 avc.create_tasks(vim.eval('a:contest_id'))
+	return created_tasks
 endfunction
 
 function! at_vim_coder#contest#load()

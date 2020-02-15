@@ -64,13 +64,13 @@ function! at_vim_coder#delete_cookie()
 	endif
 endfunction
 
-function! at_vim_coder#participate(contest_id)
+function! at_vim_coder#participate(contest_id) abort
 	if at_vim_coder#utils#check_workspace(a:contest_id)
 		call at_vim_coder#utils#echo_message('Directory(' . a:contest_id . ') already exists.')
 		return
 	endif
-	let task_list = at_vim_coder#contest#get_task_list(a:contest_id)
-	if empty(task_list)
+	let created_tasks = at_vim_coder#contest#create_tasks(a:contest_id)
+	if empty(created_tasks)
 		call at_vim_coder#utils#echo_message('Contest was not found')
 		return
 	endif
@@ -83,7 +83,7 @@ function! at_vim_coder#participate(contest_id)
 		endif
 	endif
 	call mkdir(at_vim_coder#utils#create_path(g:at_vim_coder_workspace, a:contest_id))
-	call at_vim_coder#buffer#init_task_list(a:contest_id, task_list)
+	call at_vim_coder#buffer#init_task_list(a:contest_id, created_tasks)
 	call at_vim_coder#buffer#display_task_list()
 endfunction
 

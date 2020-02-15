@@ -11,6 +11,18 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 
 class AtVimCoder:
 	def __init__(self):
+		self.tasks = {}
+		"""
+		tasks = {
+			'task_id': task_info,
+		}
+		task_info = {
+			'task_title': ''
+			'problem_info': [], # problem statement, constraints, etc...
+			'sample_input': [],
+			'sample_output': []
+		}
+		"""
 		self._session = requests.Session()
 		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'cookies')
 		self._tex_handler = tex_handler.AVC_tex_handler()
@@ -57,22 +69,20 @@ class AtVimCoder:
 		else:
 			vim.command('let l:logged_in = 1')
 
-	def get_task_list(self, contest_id):
+	def create_tasks(self, contest_id):
 		bs_contest_resp = self._download_task_list(contest_id)
 		if bs_contest_resp == None:
-			vim.command('let task_list = {}')
+			vim.command('let l:created_tasks = {}')
 		else:
-			task_table = bs_contest_resp.tbody.findAll('tr')
-			self.contest_id = contest_id
+			tasks_table = bs_contest_resp.tbody.findAll('tr')
 			tasks = {}
-			for task in task_table:
-				task_info = task.findAll('td')
-				task_id = task_info[0].text
-				task_title = task_info[1].text
-				task_url = task_info[1].a.get("href")
-				tasks[task_id] = [task_title, task_url]
-			vim.command(f'let task_list = {tasks}')
-
+			for task in tasks_table:
+				task_list_info = task.findAll('td')
+				task_id = task_list_info[0].text
+				task_title = task_list_info[1].text
+				task_url = task_list_info[1].a.get("href")
+				tasks[task_id] = self._create_task_info(task_title, task_url)
+			vim.command(f'let l:created_tasks = {tasks}')
 
 	def _download_task_list(self, contest_id):
 		url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
@@ -82,36 +92,54 @@ class AtVimCoder:
 		else:
 			return BeautifulSoup(response.text, 'html.parser')
 
-	def get_task(self, url):
+	def _create_task_info(self, task_title, url):
 		sections = self._download_task(url)
-		task = []
+		task_info = { 'task_title': task_title }
+		problem_info = []
 		if self._locale[:2] == 'ja':
-			part = ['問題文', '制約', '入力', '出力']
 			for section in sections:
-				if part == []: break
-				if section.h3.text in part:
-					task.append('['+section.h3.text+']')
+				title = section.h3.text
+				if title.startswith('入力例'):
+					section.h3.decompose()
+					task_info['sample_input'] = [line.strip() for line in section.text.splitlines() if line]
+				elif title.startswith('出力例'):
+					section.h3.decompose()
+					task_info['sample_output'] = [line.strip() for line in section.text.splitlines() if line]
+				else:
+					problem_info.append('['+section.h3.text+']')
 					section.h3.decompose()
 					self._tex_handler.replace_var_text(section)
 					self._add_single_quote_to_code_tag(section)
 					lines = [line.strip() for line in section.text.splitlines() if line]
-					task.extend(lines)
+					problem_info.extend(lines)
+					task_info['problem_info'] = problem_info
 		else:
-			part = ['Problem Statement', 'Constraints', 'Input', 'Output']
 			for section in sections:
-				if section.h3.text in part:
-					task.append('['+section.h3.text+']')
+				title = section.h3.text
+				if title.startswith('Sample Input'):
+					section.h3.decompose()
+					task_info['sample_input'] = [line.strip() for line in section.text.splitlines()]
+				elif title.startswith('Sample Output'):
+					section.h3.decompose()
+					task_info['sample_input'] = [line.strip() for line in section.text.splitlines()]
+				else:
+					problem_info.append('['+section.h3.text+']')
 					section.h3.decompose()
 					self._tex_handler.replace_var_text(section)
 					lines = [line.strip() for line in section.text.splitlines() if line]
-					task.extend(lines)
-		vim.command(f'let task = {task}')
+					problem_info.extend(lines)
+					task_info['problem_info'] = problem_info
+		return task_info
 
 	def _download_task(self, url):
 		url = AT_CODER_BASE_URL + url
 		response = self._session.get(url)
 		bs_task_soup = BeautifulSoup(response.text, 'html.parser')
-		return bs_task_soup.findAll('section')
+		if self._locale[:2] == 'ja':
+			span = bs_task_soup.find('span', attrs={'class': 'lang-ja'})
+		else:
+			span = bs_task_soup.find('span', attrs={'class': 'lang-en'})
+		return span.findAll('section')
 
 	def _add_single_quote_to_code_tag(self, section):
 		code_tags = section.findAll('code')

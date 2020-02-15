@@ -13,7 +13,8 @@ class AtVimCoder:
 	def __init__(self):
 		self.tasks = {}
 		"""
-		tasks = {
+		tasks = { 'contest_id': task_list }
+		task_list = {
 			'task_id': task_info,
 		}
 		task_info = {
@@ -69,20 +70,37 @@ class AtVimCoder:
 		else:
 			vim.command('let l:logged_in = 1')
 
+	def get_task_list(self, contest_id):
+		vim.command(f'let l:task_list = {self.tasks[contest_id]}')
+
+	def get_task_info(self, contest_id, task_id):
+		if 'problem_info' not in self.tasks[contest_id][task_id]:
+			task_url = self.tasks[contest_id][task_id]['task_url']
+			self.tasks[contest_id][task_id].update(self._create_task_info(task_url))
+		vim.command(f'let l:task_info = {self.tasks[contest_id][task_id]}')
+
 	def create_tasks(self, contest_id):
-		bs_contest_resp = self._download_task_list(contest_id)
-		if bs_contest_resp is None:
+		task_list = self._create_task_list(contest_id)
+		if task_list is None:
 			vim.command('let l:created_tasks = {}')
 		else:
-			tasks_table = bs_contest_resp.tbody.findAll('tr')
-			tasks = {}
-			for task in tasks_table:
+			self.tasks[contest_id] = task_list
+			vim.command(f'let l:created_tasks = {self.tasks[contest_id]}')
+
+	def _create_task_list(self, contest_id):
+		bs_contest_resp = self._download_task_list(contest_id)
+		if bs_contest_resp is None:
+			return None
+		else:
+			task_table = bs_contest_resp.tbody.findAll('tr')
+			task_list = {}
+			for task in task_table:
 				task_list_info = task.findAll('td')
 				task_id = task_list_info[0].text
 				task_title = task_list_info[1].text
 				task_url = task_list_info[1].a.get("href")
-				tasks[task_id] = self._create_task_info(task_title, task_url)
-			vim.command(f'let l:created_tasks = {tasks}')
+				task_list[task_id] = { 'task_title': task_title, 'task_url': task_url }
+			return task_list
 
 	def _download_task_list(self, contest_id):
 		url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
@@ -92,10 +110,10 @@ class AtVimCoder:
 		else:
 			return BeautifulSoup(response.text, 'html.parser')
 
-	def _create_task_info(self, task_title, url):
+	def _create_task_info(self, url):
 		sections = self._download_task(url)
-		task_info = { 'task_title': task_title }
 		problem_info = []
+		task_info = {}
 		if self._locale[:2] == 'ja':
 			for section in sections:
 				title = section.h3.text

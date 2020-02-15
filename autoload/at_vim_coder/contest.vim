@@ -6,6 +6,16 @@ function! at_vim_coder#contest#create_tasks(contest_id)
 	return created_tasks
 endfunction
 
+function! at_vim_coder#contest#get_task_list(contest_id)
+	py3 avc.get_task_list(vim.eval('a:contest_id'))
+	return task_list
+endfunction
+
+function! at_vim_coder#contest#get_task_info(contest_id, task_id)
+	py3 avc.get_task_info(vim.eval('a:contest_id'), vim.eval('a:task_id'))
+	return task_info
+endfunction
+
 function! at_vim_coder#contest#load()
 
 endfunction

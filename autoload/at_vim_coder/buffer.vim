@@ -5,7 +5,7 @@ function! s:get_task_id()
 	return getline('.')[0]
 endfunction
 
-function! at_vim_coder#buffer#init_task_list(contest_id, tasks)
+function! at_vim_coder#buffer#init_task_list(contest_id)
 	if tabpagenr('$') == 1 && bufnr('$') == 1 && bufname('%') == ''
 		execute 'file ' . a:contest_id . '_task_list'
 	else
@@ -13,7 +13,6 @@ function! at_vim_coder#buffer#init_task_list(contest_id, tasks)
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
 	let t:contest_id = a:contest_id
-	let t:tasks = a:tasks
 endfunction
 
 function! s:set_buffer_local_options()
@@ -40,15 +39,12 @@ function! s:focus_win(buf_name)
 	endif
 endfunction
 
-function! at_vim_coder#buffer#load_template(...)
-	if a:0 == 0
-		echo 'Hello'
-	endif
+function! at_vim_coder#buffer#load_template()
 endfunction
 
 function! at_vim_coder#buffer#display_task() abort
 	let task_id = s:get_task_id()
-	let task_info = t:tasks[task_id]
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
 	let win_existed = s:focus_win(t:contest_id . '_problem')
 	if !win_existed
 		wincmd J
@@ -67,10 +63,11 @@ function! at_vim_coder#buffer#display_task() abort
 endfunction
 
 function! at_vim_coder#buffer#display_task_list() abort
+	let task_list = at_vim_coder#contest#get_task_list(t:contest_id)
 	call s:unset_buffer_local_options()
 	%d
-	for task_id in keys(t:tasks)
-		call append(line('$'), task_id . ': ' . t:tasks[task_id]['task_title'])
+	for task_id in keys(task_list)
+		call append(line('$'), task_id . ': ' . task_list[task_id]['task_title'])
 	endfor
 	0d
 	call s:set_buffer_local_options()

@@ -13,6 +13,8 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
 	let t:contest_id = a:contest_id
+	execute 'tcd ' . g:at_vim_coder_workspace
+	execute 'tcd ' . a:contest_id
 endfunction
 
 function! s:set_buffer_local_options()
@@ -29,18 +31,24 @@ function! s:unset_buffer_local_options()
 endfunction
 
 function! s:focus_win(buf_name)
-	let win_num = bufwinnr(a:buf_name)
-	if win_num < 0
+	let win_id = bufwinid(a:buf_name)
+	if win_id < 0
 		execute 'new ' . a:buf_name
 		return 0
 	else
-		execute win_num . 'wincmd j'
+		call win_gotoid(win_id)
 		return 1
 	endif
 endfunction
 
 function! at_vim_coder#buffer#load_template()
+	echo g:at_vim_coder_template_file
 	if g:at_vim_coder_template_file == ''
+		execute 'rightbelow vnew ' . t:task_id . '.' . g:at_vim_coder_language
+	else
+		execute 'rightbelow vsplit ' . g:at_vim_coder_template_file
+		execute 'file ' . t:task_id . '.' . g:at_vim_coder_language
+		execute 'write ' . t:task_id . '.' . g:at_vim_coder_language
 	endif
 endfunction
 

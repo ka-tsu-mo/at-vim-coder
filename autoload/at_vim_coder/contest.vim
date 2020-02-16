@@ -31,13 +31,23 @@ function! at_vim_coder#contest#create_workspace(contest_id)
 	execute 'lcd ' . current_dir
 endfunction
 
-function! at_vim_coder#contest#load()
-
-endfunction
-
 function! at_vim_coder#contest#solve_task()
+	let current_task_id = t:task_id
 	call at_vim_coder#buffer#display_task()
-	call at_vim_coder#buffer#load_template()
+	let new_task_id = t:task_id
+	let current_task_source_code = current_task_id . '.' . g:at_vim_coder_language
+	let new_task_source_code = new_task_id . '.' . g:at_vim_coder_language
+	let win_existed = at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
+	if current_task_id == ''
+		setlocal nobuflisted
+	endif
+	if filereadable(new_task_source_code)
+		execute 'edit ' . new_task_source_code
+		setlocal nobuflisted
+	else
+		call at_vim_coder#buffer#load_template()
+		setlocal nobuflisted
+	endif
 endfunction
 
 let &cpo = s:save_cpo

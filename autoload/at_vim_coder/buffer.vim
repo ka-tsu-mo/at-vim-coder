@@ -13,6 +13,7 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
 	let t:contest_id = a:contest_id
+	let t:task_id = ''
 	execute 'tcd ' . g:at_vim_coder_workspace
 	execute 'tcd ' . a:contest_id
 endfunction
@@ -30,10 +31,10 @@ function! s:unset_buffer_local_options()
 	setlocal modifiable
 endfunction
 
-function! s:focus_win(buf_name)
+function! at_vim_coder#buffer#focus_win(buf_name, cmd)
 	let win_id = bufwinid(a:buf_name)
 	if win_id < 0
-		execute 'new ' . a:buf_name
+		execute 'rightbelow ' . a:cmd . ' ' . a:buf_name
 		return 0
 	else
 		call win_gotoid(win_id)
@@ -42,23 +43,22 @@ function! s:focus_win(buf_name)
 endfunction
 
 function! at_vim_coder#buffer#load_template()
-	echo g:at_vim_coder_template_file
+	let new_file = t:task_id . '.' . g:at_vim_coder_language
 	if g:at_vim_coder_template_file == ''
-		execute 'rightbelow vnew ' . t:task_id . '.' . g:at_vim_coder_language
+		execute 'file ' . new_file
+		%d
+		execute 'write ' . new_file
 	else
-		execute 'rightbelow vsplit ' . g:at_vim_coder_template_file
-		execute 'file ' . t:task_id . '.' . g:at_vim_coder_language
-		execute 'write ' . t:task_id . '.' . g:at_vim_coder_language
+		execute 'edit ' . g:at_vim_coder_template_file
+		execute 'file ' . new_file
+		execute 'write ' . new_file
 	endif
 endfunction
 
 function! at_vim_coder#buffer#display_task() abort
 	let t:task_id = s:get_task_id()
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
-	let win_existed = s:focus_win(t:contest_id . '_problem')
-	if !win_existed
-		wincmd J
-	endif
+	let win_existed = at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
 	call s:unset_buffer_local_options()
 	%d
 	for line in task_info['problem_info']

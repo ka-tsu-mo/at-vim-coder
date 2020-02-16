@@ -40,11 +40,13 @@ function! s:focus_win(buf_name)
 endfunction
 
 function! at_vim_coder#buffer#load_template()
+	if g:at_vim_coder_template_file == ''
+	endif
 endfunction
 
 function! at_vim_coder#buffer#display_task() abort
-	let task_id = s:get_task_id()
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
+	let t:task_id = s:get_task_id()
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
 	let win_existed = s:focus_win(t:contest_id . '_problem')
 	if !win_existed
 		wincmd J

@@ -16,6 +16,28 @@ function! at_vim_coder#contest#get_task_info(contest_id, task_id)
 	return task_info
 endfunction
 
+function! at_vim_coder#contest#check_workspace(contest_id)
+
+py3 << EOF
+contest_workspace = os.path.join(vim.eval('g:at_vim_coder_workspace'), vim.eval('a:contest_id'))
+if os.path.exists(contest_workspace):
+	vim.command('let l:workspace_exists = 1')
+else:
+	vim.command('let l:workspace_exists = 0')
+EOF
+
+	return workspace_exists
+endfunction
+
+function! at_vim_coder#contest#create_workspace(contest_id)
+
+py3 << EOF
+contest_workspace = os.path.join(vim.eval('g:at_vim_coder_workspace'), vim.eval('a:contest_id'))
+os.makedirs(contest_workspace)
+EOF
+
+endfunction
+
 function! at_vim_coder#contest#load()
 
 endfunction

@@ -9,6 +9,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
+let g:at_vim_coder_template_file = get(g:, 'at_vim_coder_template_file', '')
+let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'cpp')
 let s:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/python3/at_vim_coder.py
@@ -65,7 +67,7 @@ function! at_vim_coder#delete_cookie()
 endfunction
 
 function! at_vim_coder#participate(contest_id) abort
-	if at_vim_coder#utils#check_workspace(a:contest_id)
+	if at_vim_coder#contest#check_workspace(a:contest_id)
 		call at_vim_coder#utils#echo_message('Directory(' . a:contest_id . ') already exists.')
 		return
 	endif
@@ -82,7 +84,7 @@ function! at_vim_coder#participate(contest_id) abort
 			call at_vim_coder#login()
 		endif
 	endif
-	call mkdir(at_vim_coder#utils#create_path(g:at_vim_coder_workspace, a:contest_id))
+	call at_vim_coder#contest#create_workspace(a:contest_id)
 	call at_vim_coder#buffer#init_task_list(a:contest_id)
 	call at_vim_coder#buffer#display_task_list()
 endfunction

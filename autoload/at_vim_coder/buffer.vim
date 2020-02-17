@@ -55,6 +55,14 @@ function! at_vim_coder#buffer#load_template()
 	endif
 endfunction
 
+function! at_vim_coder#buffer#minimize_task_list()
+	let task_list_buf_name = t:contest_id . '_task_list'
+	let winnr = bufwinnr(task_list_buf_name)
+	if winnr > 0
+		execute winnr . 'resize ' . t:num_of_tasks
+	endif
+endfunction
+
 function! at_vim_coder#buffer#display_task() abort
 	let t:task_id = s:get_task_id()
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
@@ -74,6 +82,7 @@ endfunction
 
 function! at_vim_coder#buffer#display_task_list() abort
 	let task_list = at_vim_coder#contest#get_task_list(t:contest_id)
+	let t:num_of_tasks = len(task_list)
 	call s:unset_buffer_local_options()
 	%d
 	for task_id in keys(task_list)

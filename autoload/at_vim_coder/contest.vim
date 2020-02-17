@@ -37,16 +37,20 @@ function! at_vim_coder#contest#solve_task()
 	let new_task_id = t:task_id
 	let current_task_source_code = current_task_id . '.' . g:at_vim_coder_language
 	let new_task_source_code = new_task_id . '.' . g:at_vim_coder_language
-	let win_existed = at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
-	if current_task_id == ''
-		setlocal nobuflisted
-	endif
-	if filereadable(new_task_source_code)
-		execute 'edit ' . new_task_source_code
-		setlocal nobuflisted
-	else
-		call at_vim_coder#buffer#load_template()
-		setlocal nobuflisted
+	if current_task_id != new_task_id
+		if current_task_id == ''
+			rightbelow vnew
+		else
+			call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
+		endif
+		if filereadable(new_task_source_code)
+			execute 'edit ' . new_task_source_code
+			setlocal nobuflisted
+		else
+			call at_vim_coder#buffer#load_template()
+			setlocal nobuflisted
+		endif
+		call at_vim_coder#buffer#minimize_task_list()
 	endif
 endfunction
 

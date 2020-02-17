@@ -11,6 +11,8 @@ class AVC_tex_handler:
 				(re.compile(r'\\pm'), '±'),
 				(re.compile(r'\\div'), '÷'),
 				(re.compile(r'\\times'), '×'),
+				(re.compile(r'\\neq'), '≠'),
+				(re.compile(r'\\not='), '≠'),
 				(re.compile(r'\\leqq'), '≦'),
 				(re.compile(r'\\leq'), '≤'),
 				(re.compile(r'\\geqq'), '≧'),

@@ -48,5 +48,9 @@ function! at_vim_coder#contest#solve_task()
 	call at_vim_coder#buffer#minimize_task_list()
 endfunction
 
+function! at_vim_coder#contest#test()
+	py3 avc.run_test_case()
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

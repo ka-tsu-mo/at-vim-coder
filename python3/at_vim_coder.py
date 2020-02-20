@@ -4,6 +4,7 @@ import pickle
 import vim
 import sys
 import os
+import re
 import tex_handler
 
 AT_CODER_BASE_URL = 'https://atcoder.jp'
@@ -12,6 +13,7 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 class AtVimCoder:
 	def __init__(self):
 		self.tasks = {}
+		self.counter = 0
 		"""
 		tasks = { 'contest_id': task_list }
 		task_list = {
@@ -21,7 +23,9 @@ class AtVimCoder:
 			'task_title': ''
 			'problem_info': [], # problem statement, constraints, etc...
 			'sample_input': [],
-			'sample_output': []
+			'sample_output': [
+				{ 'value': '', 'explanation': '' }
+			],
 		}
 		"""
 		self._session = requests.Session()
@@ -112,17 +116,21 @@ class AtVimCoder:
 
 	def _create_task_info(self, url):
 		sections = self._download_task(url)
-		problem_info = []
 		task_info = {}
+		problem_info = []
+		sample_input = []
+		sample_output = []
 		if self._locale[:2] == 'ja':
 			for section in sections:
 				title = section.h3.text
 				if title.startswith('入力例'):
+					index = re.search(r'\d+', title).group(0)
 					section.h3.decompose()
-					task_info['sample_input'] = [line.strip() for line in section.text.splitlines() if line]
+					sample_input.insert(int(index), self._create_sample_io(section, False))
 				elif title.startswith('出力例'):
+					index = re.search(r'\d+', title).group(0)
 					section.h3.decompose()
-					task_info['sample_output'] = [line.strip() for line in section.text.splitlines() if line]
+					sample_output.insert(int(index), self._create_sample_io(section, True))
 				else:
 					problem_info.append('['+section.h3.text+']')
 					section.h3.decompose()
@@ -130,23 +138,26 @@ class AtVimCoder:
 					self._add_single_quote_to_code_tag(section)
 					lines = [line.strip() for line in section.text.splitlines() if line]
 					problem_info.extend(lines)
-					task_info['problem_info'] = problem_info
 		else:
 			for section in sections:
 				title = section.h3.text
 				if title.startswith('Sample Input'):
-					section.h3.decompose()
-					task_info['sample_input'] = [line.strip() for line in section.text.splitlines()]
+					index, sample_input = self._create_sample_io(section, False)
+					sample_input[index] = sample_input
 				elif title.startswith('Sample Output'):
-					section.h3.decompose()
-					task_info['sample_input'] = [line.strip() for line in section.text.splitlines()]
+					index, sample_input = self._create_sample_io(section, True)
+					sample_output[index] = sample_output
 				else:
 					problem_info.append('['+section.h3.text+']')
 					section.h3.decompose()
 					self._tex_handler.replace_var_text(section)
 					lines = [line.strip() for line in section.text.splitlines() if line]
 					problem_info.extend(lines)
-					task_info['problem_info'] = problem_info
+		task_info['problem_info'] = problem_info
+		task_info['sample_input'] = sample_input
+		task_info['sample_output'] = sample_output
+		print(task_info['sample_input'])
+		print(task_info['sample_output'])
 		return task_info
 
 	def _download_task(self, url):
@@ -167,3 +178,20 @@ class AtVimCoder:
 		for code_tag in code_tags:
 			current_text = code_tag.text
 			code_tag.string = '\'' + current_text + '\''
+
+	def _create_sample_io(self, section, is_out):
+		pre_tag = section.find('pre').contents[0]
+		section.pre.decompose()
+		if is_out:
+			sample_output = {}
+			sample_output['value'] = [line for line in pre_tag.splitlines()]
+			self._tex_handler.replace_var_text(section)
+			self._add_single_quote_to_code_tag(section)
+			sample_output['explanation'] = [line for line in section.text.splitlines() if line]
+			return sample_output
+		else:
+			return [line for line in pre_tag.splitlines()]
+
+	def run_test_case(self):
+		self.counter += 1
+		print(self.counter)

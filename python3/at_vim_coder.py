@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import pickle
+import queue
 import vim
 import sys
 import os
@@ -13,7 +14,6 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 class AtVimCoder:
 	def __init__(self):
 		self.tasks = {}
-		self.counter = 0
 		"""
 		tasks = { 'contest_id': task_list }
 		task_list = {
@@ -29,9 +29,10 @@ class AtVimCoder:
 		}
 		"""
 		self._session = requests.Session()
+		self._update_buf_queue = queue.Queue()
 		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'cookies')
-		self._tex_handler = tex_handler.AVC_tex_handler()
 		self._locale = vim.eval('$LANG')
+		self._tex_handler = tex_handler.AVC_tex_handler()
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))
@@ -142,11 +143,13 @@ class AtVimCoder:
 			for section in sections:
 				title = section.h3.text
 				if title.startswith('Sample Input'):
-					index, sample_input = self._create_sample_io(section, False)
-					sample_input[index] = sample_input
+					index = re.search(r'\d+', title).group(0)
+					section.h3.decompose()
+					sample_input.insert(int(index), self._create_sample_io(section, False))
 				elif title.startswith('Sample Output'):
-					index, sample_input = self._create_sample_io(section, True)
-					sample_output[index] = sample_output
+					index = re.search(r'\d+', title).group(0)
+					section.h3.decompose()
+					sample_output.insert(int(index), self._create_sample_io(section, True))
 				else:
 					problem_info.append('['+section.h3.text+']')
 					section.h3.decompose()
@@ -156,8 +159,6 @@ class AtVimCoder:
 		task_info['problem_info'] = problem_info
 		task_info['sample_input'] = sample_input
 		task_info['sample_output'] = sample_output
-		print(task_info['sample_input'])
-		print(task_info['sample_output'])
 		return task_info
 
 	def _download_task(self, url):
@@ -191,7 +192,3 @@ class AtVimCoder:
 			return sample_output
 		else:
 			return [line for line in pre_tag.splitlines()]
-
-	def run_test_case(self):
-		self.counter += 1
-		print(self.counter)

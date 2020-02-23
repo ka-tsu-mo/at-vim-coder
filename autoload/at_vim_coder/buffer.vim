@@ -44,7 +44,7 @@ function! at_vim_coder#buffer#focus_win(buf_name, cmd)
 endfunction
 
 function! at_vim_coder#buffer#load_template()
-	let new_file = t:task_id . '.' . g:at_vim_coder_language
+	let new_file = t:task_id . at_vim_coder#language#get_extension()
 	if g:at_vim_coder_template_file == ''
 		execute 'file ' . new_file
 		%d
@@ -91,6 +91,19 @@ function! at_vim_coder#buffer#display_task_list() abort
 	endfor
 	0d
 	call s:set_buffer_local_options()
+endfunction
+
+function! at_vim_coder#buffer#get_source_code()
+	let task_id = s:get_task_id()
+	let source_code_buf = task_id . at_vim_coder#language#get_extension()
+	let win_id = bufwinid(source_code_buf)
+	if win_id < 0
+		return ''
+	else
+		call win_gotoid(win_id)
+		let source_code = getline(1, line('$'))
+		return source_code
+	endif
 endfunction
 
 let &cpo = s:save_cpo

@@ -35,8 +35,9 @@ function! at_vim_coder#contest#solve_task()
 	let current_task_id = t:task_id
 	call at_vim_coder#buffer#display_task()
 	let new_task_id = t:task_id
-	let current_task_source_code = current_task_id . '.' . g:at_vim_coder_language
-	let new_task_source_code = new_task_id . '.' . g:at_vim_coder_language
+	call at_vim_coder#language#redefine()
+	let current_task_source_code = current_task_id . at_vim_coder#language#get_extension()
+	let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
 	call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
 	setlocal nobuflisted
 	if filereadable(new_task_source_code)
@@ -53,24 +54,19 @@ function! at_vim_coder#contest#test()
 	if empty(source_code)
 		call at_vim_coder#utils#echo_message('SourceCode is not loaded')
 	else
-		let complie_command = at_vim_coder#language#get_compile_command()
-		if complie_command !=# ''
+		if at_vim_coder#language#needs_compile()
 			if !isdirectory('bin')
 				call mkdir('bin')
 			endif
-			execute '!' . complie_command
-		endif
-		let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
-		let i = 0
-		while i < len(task_info['sample_input'])
-			let sample_input = join(task_info['sample_input'][i], "\n")
-			let sample_output = join(task_info['sample_output'][i]['value'], "\n")
-			let result = system(at_vim_coder#language#get_exe(), sample_input)
-			if result ==# sample_output."\n"
-				echo 'AC'
+			let compile_output = system(at_vim_coder#language#get_compile_command())
+			if v:shell_error != 0
+				call at_vim_coder#utils#echo_message('CE')
+				echo compile_output
+				return
 			endif
-			let i += 1
-		endwhile
+		endif
+		let run_command = at_vim_coder#language#get_exe()
+		py3 avc.run_test(vim.eval('t:contest_id'), vim.eval('t:task_id'), vim.eval('run_command'))
 	endif
 
 endfunction

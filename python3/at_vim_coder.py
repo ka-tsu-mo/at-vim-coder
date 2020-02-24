@@ -6,6 +6,7 @@ import vim
 import sys
 import os
 import re
+import subprocess
 import tex_handler
 
 AT_CODER_BASE_URL = 'https://atcoder.jp'
@@ -23,9 +24,15 @@ class AtVimCoder:
 			'task_title': ''
 			'problem_info': [], # problem statement, constraints, etc...
 			'sample_input': [],
-			'sample_output': [
-				{ 'value': '', 'explanation': '' }
-			],
+			'sample_output': [{
+					'value': '',
+					'explanation': ''
+			}],
+			'test': [{
+				'status': '' #TLE, AC, WA
+				'stdout': '',
+				'stderr': ''
+			}]
 		}
 		"""
 		self._session = requests.Session()
@@ -192,3 +199,25 @@ class AtVimCoder:
 			return sample_output
 		else:
 			return [line for line in pre_tag.splitlines()]
+
+	def run_test(self, contest_id, task_id, command):
+		sample_input_list = self.tasks[contest_id][task_id]['sample_input']
+		sample_output_list = self.tasks[contest_id][task_id]['sample_output']
+		test_result_list = []
+		for i in range(len(sample_input_list)):
+			sample_input = '\n'.join(sample_input_list[i])
+			sample_output = '\n'.join(sample_output_list[i]['value'])
+			test_result = {}
+			try:
+				completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True)
+			except subprocess.TimeoutExpired:
+				test_result['status'] = 'TLE'
+			else:
+				test_result['stdout'] = completed_process.stdout
+				test_result['stderr'] = completed_process.stderr
+				if completed_process.stdout == sample_output:
+					test_result['status'] = 'AC'
+				else:
+					test_result['status'] = 'WA'
+			test_result_list.insert(i, test_result)
+		self.tasks[contest_id][task_id]['test'] = test_result_list

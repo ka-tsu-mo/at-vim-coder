@@ -209,13 +209,15 @@ class AtVimCoder:
 			sample_output = '\n'.join(sample_output_list[i]['value'])
 			test_result = {}
 			try:
-				completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True)
-			except subprocess.TimeoutExpired:
+				completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True, timeout=2)
+			except subprocess.TimeoutExpired as e:
 				test_result['status'] = 'TLE'
+				test_result['stdout'] = e.stdout
+				test_result['stderr'] = e.stderr
 			else:
 				test_result['stdout'] = completed_process.stdout
 				test_result['stderr'] = completed_process.stderr
-				if completed_process.stdout == sample_output:
+				if completed_process.stdout[:-1] == sample_output:
 					test_result['status'] = 'AC'
 				else:
 					test_result['status'] = 'WA'

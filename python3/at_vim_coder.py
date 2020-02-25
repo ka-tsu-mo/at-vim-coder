@@ -27,17 +27,11 @@ class AtVimCoder:
 			'sample_output': [{
 					'value': '',
 					'explanation': ''
-			}],
-			'test': [{
-				'status': '' #TLE, AC, WA
-				'stdout': '',
-				'stderr': ''
 			}]
 		}
 		"""
 		self._session = requests.Session()
-		self._update_buf_queue = queue.Queue()
-		self._cookies_path = os.path.join(vim.eval('s:at_vim_coder_repo_dir'), 'cookies')
+		self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
 		self._tex_handler = tex_handler.AVC_tex_handler()
 		if os.path.exists(self._cookies_path):
@@ -199,27 +193,3 @@ class AtVimCoder:
 			return sample_output
 		else:
 			return [line for line in pre_tag.splitlines()]
-
-	def run_test(self, contest_id, task_id, command):
-		sample_input_list = self.tasks[contest_id][task_id]['sample_input']
-		sample_output_list = self.tasks[contest_id][task_id]['sample_output']
-		test_result_list = []
-		for i in range(len(sample_input_list)):
-			sample_input = '\n'.join(sample_input_list[i])
-			sample_output = '\n'.join(sample_output_list[i]['value'])
-			test_result = {}
-			try:
-				completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True, timeout=2)
-			except subprocess.TimeoutExpired as e:
-				test_result['status'] = 'TLE'
-				test_result['stdout'] = e.stdout
-				test_result['stderr'] = e.stderr
-			else:
-				test_result['stdout'] = completed_process.stdout
-				test_result['stderr'] = completed_process.stderr
-				if completed_process.stdout[:-1] == sample_output:
-					test_result['status'] = 'AC'
-				else:
-					test_result['status'] = 'WA'
-			test_result_list.insert(i, test_result)
-		self.tasks[contest_id][task_id]['test'] = test_result_list

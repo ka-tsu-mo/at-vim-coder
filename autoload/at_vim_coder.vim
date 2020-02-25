@@ -11,7 +11,7 @@ set cpo&vim
 let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
 let g:at_vim_coder_template_file = get(g:, 'at_vim_coder_template_file', '')
 let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++14 (GCC 5.4.1)')
-let s:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
+let g:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/python3/at_vim_coder.py
 py3 avc = AtVimCoder()

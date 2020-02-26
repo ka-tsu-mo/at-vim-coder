@@ -3,6 +3,8 @@ import sys
 import json
 
 def run_test(test_info):
+	task_id = test_info.pop('task_id')
+	print(task_id)
 	command = test_info.pop('command')
 	task_info = test_info
 	sample_input_list = task_info['sample_input']
@@ -15,8 +17,8 @@ def run_test(test_info):
 			completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True, timeout=2)
 		except subprocess.TimeoutExpired as e:
 			test_result['status'] = 'TLE'
-			test_result['stdout'] = e.stdout
-			test_result['stderr'] = e.stderr
+			test_result['stdout'] = ''
+			test_result['stderr'] = ''
 		else:
 			test_result['stdout'] = completed_process.stdout
 			test_result['stderr'] = completed_process.stderr

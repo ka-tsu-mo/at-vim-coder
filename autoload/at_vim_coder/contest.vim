@@ -66,11 +66,12 @@ function! at_vim_coder#contest#test()
 			endif
 		endif
 		let test_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
+		let test_info['task_id'] = t:task_id
 		let test_info['command'] = at_vim_coder#language#get_exe()
 		let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
 		if has('nvim')
 			let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler'), 'stdout_buffered': v:true})
-			call at_vim_coder#utils#echo_message('Testing...')
+			call at_vim_coder#utils#echo_message('Testing... '. '[' . t:task_id . ']')
 			call chansend(job, json_encode(test_info))
 			call chanclose(job, 'stdin')
 		else
@@ -84,14 +85,13 @@ endfunction
 
 function! s:test_result_handler(channel, data, name)
 	let test_result_list = []
-	for test_result in a:data
-		if test_result != ''
-			let test_result = substitute(test_result, "'", "\"", "g")
-			call add(test_result_list, json_decode(test_result))
-		endif
+	let task_id = a:data[0]
+	for test_result in a:data[1:-2]
+		let test_result = substitute(test_result, "'", "\"", "g")
+		call add(test_result_list, json_decode(test_result))
 	endfor
-	execute 'let t:'. t:task_id . '_test_result = ' string(test_result_list)
-	call at_vim_coder#utils#echo_message('Test Completed')
+	execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
+	call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
 endfunction
 
 let &cpo = s:save_cpo

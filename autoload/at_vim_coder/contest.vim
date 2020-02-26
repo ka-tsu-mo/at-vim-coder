@@ -70,26 +70,43 @@ function! at_vim_coder#contest#test()
 		let test_info['command'] = at_vim_coder#language#get_exe()
 		let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
 		if has('nvim')
-			let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler'), 'stdout_buffered': v:true})
+			let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
 			call at_vim_coder#utils#echo_message('Testing... '. '[' . t:task_id . ']')
 			call chansend(job, json_encode(test_info))
 			call chanclose(job, 'stdin')
 		else
-			let job = job_start('python3 '. test_py, {'out_cb': function('test_result_handler')})
+			let job = job_start('python3 '. test_py, {'close_cb': function('s:test_result_handler_vim8')})
 			let channel = job_getchannel(job)
-			call ch_sendraw(channel, json(test_info))
+			call at_vim_coder#utils#echo_message('Testing... '. '[' . t:task_id . ']')
+			call ch_sendraw(channel, json_encode(test_info))
 			call ch_close_in(channel)
 		endif
 	endif
 endfunction
 
-function! s:test_result_handler(channel, data, name)
+function! s:test_result_handler_nvim(channel, data, name)
 	let test_result_list = []
 	let task_id = a:data[0]
 	for test_result in a:data[1:-2]
 		let test_result = substitute(test_result, "'", "\"", "g")
 		call add(test_result_list, json_decode(test_result))
 	endfor
+	execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
+	call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
+endfunction
+
+function! s:test_result_handler_vim8(channel)
+	let test_result_list = []
+	let i = 0
+	while ch_status(a:channel, {'part': 'out'}) == 'buffered'
+		if i == 0
+			let task_id = ch_read(a:channel, {'timeout': 0})
+		else
+			let test_result = substitute(ch_read(a:channel, {'timeout': 0}), "'", "\"", "g")
+			call add(test_result_list, json_decode(test_result))
+		endif
+		let i += 1
+	endwhile
 	execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
 	call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
 endfunction

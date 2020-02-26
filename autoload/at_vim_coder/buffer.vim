@@ -13,6 +13,7 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
 	nmap <buffer><silent> t :<C-u>call at_vim_coder#contest#test()<CR>
+	nmap <buffer><silent> c :<C-u>call at_vim_coder#contest#check_status()<CR>
 	let t:contest_id = a:contest_id
 	let t:task_id = ''
 	execute 'tcd ' . g:at_vim_coder_workspace

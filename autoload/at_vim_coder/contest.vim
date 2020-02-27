@@ -111,5 +111,75 @@ function! s:test_result_handler_vim8(channel)
 	call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
 endfunction
 
+function! at_vim_coder#contest#check_status()
+	if t:task_id != ''
+		if has('nvim')
+			let buf = nvim_create_buf(v:false, v:true)
+			let contest_status = s:create_contest_status()
+			call nvim_buf_set_lines(buf, 0, -1, v:true, contest_status)
+			let opts = {
+						\	'relative': 'editor',
+						\	'width': 100,
+						\	'height': len(contest_status),
+						\	'row': 0,
+						\	'col': 0,
+						\	'style': 'minimal'
+						\}
+			let win = nvim_open_win(buf, 1, opts)
+		else
+		endif
+	endif
+endfunction
+
+function! s:create_contest_status()
+	let contest_status = []
+	let test_result = 't:' . t:task_id . 'test_result'
+	let submit_result = 't:' . t:task_id . '_submit_result'
+	if exists(submit_result)
+		call add(contest_status, 'Submit: ' . eval(submit_result))
+	else
+		call add(contest_status, "Submit: NONE")
+	endif
+	" insert blank line
+	call add(contest_status, '')
+
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
+	let sample_input = task_info['sample_input']
+	let sample_output = task_info['sample_output']
+	let i = 0
+	while i < len(sample_input)
+		call add(contest_status, 'Sample Input '. string(i+1))
+		for line in sample_input[i]
+			call add(contest_status, line)
+		endfor
+		call add(contest_status, '')
+		call add(contest_status, 'Sample Output ' . string(i+1))
+		for line in sample_output[i]['value']
+			call add(contest_status, line)
+		endfor
+		call add(contest_status, '')
+		if !empty(sample_output[i]['explanation'])
+			for line in sample_output[i]['explanation']
+				call add(contest_status, line)
+			endfor
+			call add(contest_status, '')
+		endif
+		if exists(test_result)
+			let test_result_status = eval(test_result)[i]['status']
+			call add(contest_status, "Test Result: " . test_result_status)
+			if test_result_status != 'AC'
+				call add(contest_status, "stdout\n" . join(eval(test_result)[i]['stdout']))
+				call add(contest_status, "stderr\n" . join(eval(test_result)[i]['stderr']))
+			endif
+		else
+			call add(contest_status, "Test Result: NONE")
+		endif
+		call add(contest_status, '')
+		let i += 1
+	endwhile
+	echo contest_status
+	return contest_status
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

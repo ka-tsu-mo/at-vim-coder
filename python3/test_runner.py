@@ -15,7 +15,7 @@ def run_test(test_info):
 		test_result = {}
 		try:
 			completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True, timeout=2)
-		except subprocess.TimeoutExpired as e:
+		except subprocess.TimeoutExpired:
 			test_result['status'] = 'TLE'
 			test_result['stdout'] = ''
 			test_result['stderr'] = ''

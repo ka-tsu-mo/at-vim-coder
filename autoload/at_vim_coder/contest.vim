@@ -117,6 +117,7 @@ function! at_vim_coder#contest#check_status()
 			let buf = nvim_create_buf(v:false, v:true)
 			let contest_status = s:create_contest_status()
 			call nvim_buf_set_lines(buf, 0, -1, v:true, contest_status)
+			call nvim_buf_set_option(buf, 'modifiable', v:false)
 			let opts = {
 						\	'relative': 'editor',
 						\	'width': 100,
@@ -133,7 +134,7 @@ endfunction
 
 function! s:create_contest_status()
 	let contest_status = []
-	let test_result = 't:' . t:task_id . 'test_result'
+	let test_result = 't:' . t:task_id . '_test_result'
 	let submit_result = 't:' . t:task_id . '_submit_result'
 	if exists(submit_result)
 		call add(contest_status, 'Submit: ' . eval(submit_result))
@@ -166,10 +167,12 @@ function! s:create_contest_status()
 		endif
 		if exists(test_result)
 			let test_result_status = eval(test_result)[i]['status']
-			call add(contest_status, "Test Result: " . test_result_status)
-			if test_result_status != 'AC'
-				call add(contest_status, "stdout\n" . join(eval(test_result)[i]['stdout']))
-				call add(contest_status, "stderr\n" . join(eval(test_result)[i]['stderr']))
+			call add(contest_status, 'Test Result: ' . test_result_status)
+			if test_result_status == 'WA'
+				call add(contest_status, 'stdout')
+				call add(contest_status, eval(test_result)[i]['stdout'])
+				call add(contest_status, 'stderr')
+				call add(contest_status, eval(test_result)[i]['stderr'])
 			endif
 		else
 			call add(contest_status, "Test Result: NONE")

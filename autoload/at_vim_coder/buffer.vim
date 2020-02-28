@@ -107,5 +107,26 @@ function! at_vim_coder#buffer#get_source_code()
 	endif
 endfunction
 
+function! at_vim_coder#buffer#init_status_buf(contest_status)
+	if has('nvim')
+		let buf = nvim_create_buf(v:false, v:true)
+		call nvim_buf_set_lines(buf, 0, -1, v:true, a:contest_status)
+		call nvim_buf_set_option(buf, 'modifiable', v:false)
+		return buf
+	endif
+endfunction
+
+function! at_vim_coder#buffer#close_popup()
+	if has('nvim')
+		let bufname = t:task_id . '_status'
+		let win_id= bufwinid(bufname)
+		if win_id > 0
+			call nvim_win_close(win_id, v:true)
+		endif
+	else
+		call popup_clear()
+	endif
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

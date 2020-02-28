@@ -113,11 +113,9 @@ endfunction
 
 function! at_vim_coder#contest#check_status()
 	if t:task_id != ''
+		let contest_status = s:create_contest_status()
 		if has('nvim')
-			let buf = nvim_create_buf(v:false, v:true)
-			let contest_status = s:create_contest_status()
-			call nvim_buf_set_lines(buf, 0, -1, v:true, contest_status)
-			call nvim_buf_set_option(buf, 'modifiable', v:false)
+			let buf = at_vim_coder#buffer#init_status_buf(contest_status)
 			let opts = {
 						\	'relative': 'editor',
 						\	'width': 100,
@@ -127,8 +125,11 @@ function! at_vim_coder#contest#check_status()
 						\	'style': 'minimal'
 						\}
 			let win = nvim_open_win(buf, 1, opts)
+			execute 'file ' . t:task_id . '_status'
 		else
+			let win = popup_create(contest_status, {})
 		endif
+		nmap <buffer><silent> q :<C-u>call at_vim_coder#buffer#close_popup()<CR>
 	endif
 endfunction
 

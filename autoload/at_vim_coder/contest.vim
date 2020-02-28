@@ -122,8 +122,8 @@ function! at_vim_coder#contest#check_status()
 						\	'relative': 'editor',
 						\	'width': 100,
 						\	'height': len(contest_status),
-						\	'row': 0,
-						\	'col': 0,
+						\	'row': &lines/2 - len(contest_status)/2,
+						\	'col': &columns/2 - 50,
 						\	'style': 'minimal'
 						\}
 			let win = nvim_open_win(buf, 1, opts)
@@ -180,7 +180,6 @@ function! s:create_contest_status()
 		call add(contest_status, '')
 		let i += 1
 	endwhile
-	echo contest_status
 	return contest_status
 endfunction
 

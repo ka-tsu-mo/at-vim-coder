@@ -66,11 +66,7 @@ function! at_vim_coder#delete_cookie()
 	endif
 endfunction
 
-function! at_vim_coder#participate(contest_id) abort
-	if at_vim_coder#contest#check_workspace(a:contest_id)
-		call at_vim_coder#utils#echo_message('Directory(' . a:contest_id . ') already exists.')
-		return
-	endif
+function! s:prepare_for_contest(contest_id)
 	let created_task = at_vim_coder#contest#create_tasks(a:contest_id)
 	if empty(created_task)
 		call at_vim_coder#utils#echo_message('Contest was not found')
@@ -84,9 +80,43 @@ function! at_vim_coder#participate(contest_id) abort
 			call at_vim_coder#login()
 		endif
 	endif
-	call at_vim_coder#contest#create_workspace(a:contest_id)
-	call at_vim_coder#buffer#init_task_list(a:contest_id)
-	call at_vim_coder#buffer#display_task_list()
+endfunction
+
+function! at_vim_coder#participate(mode, contest_id)
+	let contest_to_participate = split(a:contest_id, ':')
+	if len(contest_to_participate) >= 3
+		call at_vim_coder#utils#echo_message('Invalid Contest ID')
+		return
+	endif
+	if a:mode == 'new'
+		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
+			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') already exists')
+			let ans = confirm('Review the contest?', "&yes\n&no")
+			if ans == 1
+				call s:prepare_for_contest(contest_to_participate[0])
+				call at_vim_coder#contest#review(contest_to_participate)
+			else
+				return
+			endif
+		else
+			call s:prepare_for_contest(contest_to_participate[0])
+			call at_vim_coder#contest#new(contest_to_participate)
+		endif
+	else
+		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
+			call s:prepare_for_contest(contest_to_participate[0])
+			call at_vim_coder#contest#review(contest_to_participate)
+		else
+			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') was not found')
+			let ans = confirm('Create new workspace?', "&yes\n&no")
+			if ans == 1
+				call s:prepare_for_contest(contest_to_participate[0])
+				call at_vim_coder#contest#new(contest_to_participate)
+			else
+				return
+			endif
+		endif
+	endif
 endfunction
 
 let &cpo = s:save_cpo

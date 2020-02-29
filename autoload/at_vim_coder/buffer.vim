@@ -33,6 +33,20 @@ function! s:unset_buffer_local_options()
 	setlocal modifiable
 endfunction
 
+function! at_vim_coder#buffer#select_task(task_id)
+	let win_id = bufwinid(t:contest_id.'_task_list')
+	if win_id > 0
+		call win_gotoid(win_id)
+		let pos = char2nr(a:task_id) - 64
+		if 1 <= pos && pos <= t:num_of_tasks
+			call cursor(pos, 0)
+			return 1
+		else
+			return -1
+		endif
+	endif
+endfunction
+
 function! at_vim_coder#buffer#focus_win(buf_name, cmd)
 	let win_id = bufwinid(a:buf_name)
 	if win_id < 0
@@ -86,7 +100,6 @@ function! at_vim_coder#buffer#display_task_list() abort
 	let task_list = at_vim_coder#contest#get_task_list(t:contest_id)
 	let t:num_of_tasks = len(task_list)
 	call s:unset_buffer_local_options()
-	%d
 	for task_id in keys(task_list)
 		call append(line('$'), task_id . ': ' . task_list[task_id]['task_title'])
 	endfor

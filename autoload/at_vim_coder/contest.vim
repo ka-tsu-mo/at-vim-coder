@@ -31,6 +31,61 @@ function! at_vim_coder#contest#create_workspace(contest_id)
 	execute 'lcd ' . current_dir
 endfunction
 
+function! s:check_tab_duplicate(contest_id)
+	let tabs_info = gettabinfo()
+	for tab_info in tabs_info
+		let variables = tab_info['variables']
+		if index(keys(variables), 'contest_id') >= 0
+			let contest_id = variables['contest_id']
+			if contest_id == a:contest_id
+				return tab_info['tabnr']
+			endif
+		endif
+	endfor
+	return -1
+endfunction
+
+function! at_vim_coder#contest#new(contest_to_participate) abort
+	let contest_id = a:contest_to_participate[0]
+	call at_vim_coder#contest#create_workspace(contest_id)
+	let tabnr = s:check_tab_duplicate(contest_id)
+	if tabnr > 0
+		let win_id = win_getid(contest_id.'_task_list', tabnr)
+		call win_gotoid(win_id)
+	else
+		call at_vim_coder#buffer#init_task_list(contest_id)
+		call at_vim_coder#buffer#display_task_list()
+	endif
+	if len(a:contest_to_participate) == 2
+		let task_id = a:contest_to_participate[1]
+		let task_exists = at_vim_coder#buffer#select_task(task_id)
+		if task_exists
+			call at_vim_coder#contest#solve_task()
+		endif
+	endif
+endfunction
+
+function! at_vim_coder#contest#review(contest_to_participate) abort
+	let contest_id = a:contest_to_participate[0]
+	let tabnr = s:check_tab_duplicate(contest_id)
+	if tabnr > 0
+		let win_id = win_getid(contest_id.'_task_list', tabnr)
+		call win_gotoid(win_id)
+	else
+		call at_vim_coder#buffer#init_task_list(contest_id)
+		call at_vim_coder#buffer#display_task_list()
+	endif
+	if len(a:contest_to_participate) == 2
+		let task_id = a:contest_to_participate[1]
+		let task_exists = at_vim_coder#buffer#select_task(task_id)
+		if task_exists
+			call at_vim_coder#contest#solve_task()
+		else
+			call at_vim_coder#utils#echo_message('Task not found')
+		endif
+	endif
+endfunction
+
 function! at_vim_coder#contest#solve_task()
 	let current_task_id = t:task_id
 	call at_vim_coder#buffer#display_task()

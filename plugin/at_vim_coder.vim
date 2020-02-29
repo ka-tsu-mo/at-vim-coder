@@ -17,16 +17,14 @@ function! s:At_Vim_Coder(...)
 			call at_vim_coder#delete_cookie()
 		elseif a:1 ==# 'status'
 			call at_vim_coder#echo_login_status()
-		elseif a:1 ==# 'new'
-			call at_vim_coder#utils#echo_message('Please specify the Contest ID')
 		else
 			call at_vim_coder#utils#echo_message('Invalid argument')
 		endif
 	elseif a:0 == 2
 		if a:1 ==# 'new'
-			call at_vim_coder#participate(a:2)
-		else
-			call at_vim_coder#utils#echo_message('Invalid argument')
+			call at_vim_coder#participate(a:1, a:2)
+		elseif a:1 ==# 'review'
+			call at_vim_coder#participate(a:1, a:2)
 		endif
 	else
 		call at_vim_coder#utils#echo_message('Invalid argument')

@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! s:get_task_id()
+function! at_vim_coder#buffer#get_task_id()
 	return getline('.')[0]
 endfunction
 
@@ -12,8 +12,8 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 		execute 'tabnew ' . a:contest_id . '_task_list'
 	endif
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
-	nmap <buffer><silent> t :<C-u>call at_vim_coder#contest#test()<CR>
-	nmap <buffer><silent> c :<C-u>call at_vim_coder#contest#check_status()<CR>
+	nmap <buffer><silent> t :<C-u>call at_vim_coder#contest#test('buffer')<CR>
+	nmap <buffer><silent> c :<C-u>call at_vim_coder#contest#check_status('buffer')<CR>
 	let t:contest_id = a:contest_id
 	let t:task_id = ''
 	execute 'tcd ' . g:at_vim_coder_workspace
@@ -80,7 +80,7 @@ function! at_vim_coder#buffer#minimize_task_list()
 endfunction
 
 function! at_vim_coder#buffer#display_task() abort
-	let t:task_id = s:get_task_id()
+	let t:task_id = at_vim_coder#buffer#get_task_id()
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
 	let win_existed = at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
 	call s:unset_buffer_local_options()
@@ -108,8 +108,7 @@ function! at_vim_coder#buffer#display_task_list() abort
 endfunction
 
 function! at_vim_coder#buffer#get_source_code()
-	let task_id = s:get_task_id()
-	let source_code_buf = task_id . at_vim_coder#language#get_extension()
+	let source_code_buf = t:task_id . at_vim_coder#language#get_extension()
 	let win_id = bufwinid(source_code_buf)
 	if win_id < 0
 		return ''
@@ -120,9 +119,15 @@ function! at_vim_coder#buffer#get_source_code()
 	endif
 endfunction
 
-function! at_vim_coder#buffer#init_status_buf(contest_status)
+function! at_vim_coder#buffer#create_status_buf(contest_status)
 	if has('nvim')
-		let buf = nvim_create_buf(v:false, v:true)
+		let buf_name = t:contest_id . '_status'
+		if bufexists(buf_name)
+			let buf = bufnr(buf_name)
+		else
+			let buf = nvim_create_buf(v:false, v:true)
+		endif
+		call nvim_buf_set_option(buf, 'modifiable', v:true)
 		call nvim_buf_set_lines(buf, 0, -1, v:true, a:contest_status)
 		call nvim_buf_set_option(buf, 'modifiable', v:false)
 		return buf
@@ -131,8 +136,8 @@ endfunction
 
 function! at_vim_coder#buffer#close_popup()
 	if has('nvim')
-		let bufname = t:task_id . '_status'
-		let win_id= bufwinid(bufname)
+		let buf_name = t:contest_id . '_status'
+		let win_id= bufwinid(buf_name)
 		if win_id > 0
 			call nvim_win_close(win_id, v:true)
 		endif

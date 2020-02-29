@@ -104,9 +104,13 @@ function! at_vim_coder#contest#solve_task()
 	call at_vim_coder#buffer#minimize_task_list()
 endfunction
 
-function! at_vim_coder#contest#test()
-	let source_code = at_vim_coder#buffer#get_source_code()
-	if empty(source_code)
+function! at_vim_coder#contest#test(...)
+	if a:0 == 0
+		let task_id = t:task_id
+	else
+		let task_id = at_vim_coder#buffer#get_task_id()
+	endif
+	if !filereadable(task_id . g:at_vim_coder#language#get_extension())
 		call at_vim_coder#utils#echo_message('SourceCode is not loaded')
 	else
 		if at_vim_coder#language#needs_compile()
@@ -120,19 +124,19 @@ function! at_vim_coder#contest#test()
 				return
 			endif
 		endif
-		let test_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
-		let test_info['task_id'] = t:task_id
+		let test_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
+		let test_info['task_id'] = task_id
 		let test_info['command'] = at_vim_coder#language#get_exe()
 		let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
 		if has('nvim')
 			let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
-			call at_vim_coder#utils#echo_message('Testing... '. '[' . t:task_id . ']')
+			call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
 			call chansend(job, json_encode(test_info))
 			call chanclose(job, 'stdin')
 		else
 			let job = job_start('python3 '. test_py, {'close_cb': function('s:test_result_handler_vim8')})
 			let channel = job_getchannel(job)
-			call at_vim_coder#utils#echo_message('Testing... '. '[' . t:task_id . ']')
+			call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
 			call ch_sendraw(channel, json_encode(test_info))
 			call ch_close_in(channel)
 		endif
@@ -166,11 +170,16 @@ function! s:test_result_handler_vim8(channel)
 	call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
 endfunction
 
-function! at_vim_coder#contest#check_status()
-	if t:task_id != ''
-		let contest_status = s:create_contest_status()
+function! at_vim_coder#contest#check_status(...)
+	if a:0 == 0
+		let task_id = t:task_id
+	else
+		let task_id = at_vim_coder#buffer#get_task_id()
+	endif
+	if task_id != ''
+		let contest_status = s:create_contest_status(task_id)
 		if has('nvim')
-			let buf = at_vim_coder#buffer#init_status_buf(contest_status)
+			let buf = at_vim_coder#buffer#create_status_buf(contest_status)
 			let opts = {
 						\	'relative': 'editor',
 						\	'width': 100,
@@ -180,7 +189,7 @@ function! at_vim_coder#contest#check_status()
 						\	'style': 'minimal'
 						\}
 			let win = nvim_open_win(buf, 1, opts)
-			execute 'file ' . t:task_id . '_status'
+			execute 'file ' . t:contest_id . '_status'
 		else
 			let win = popup_create(contest_status, {})
 		endif
@@ -188,10 +197,11 @@ function! at_vim_coder#contest#check_status()
 	endif
 endfunction
 
-function! s:create_contest_status()
+function! s:create_contest_status(task_id)
 	let contest_status = []
-	let test_result = 't:' . t:task_id . '_test_result'
-	let submit_result = 't:' . t:task_id . '_submit_result'
+	let test_result = 't:' . a:task_id . '_test_result'
+	let submit_result = 't:' . a:task_id . '_submit_result'
+
 	if exists(submit_result)
 		call add(contest_status, 'Submit: ' . eval(submit_result))
 	else
@@ -200,7 +210,7 @@ function! s:create_contest_status()
 	" insert blank line
 	call add(contest_status, '')
 
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
 	let sample_input = task_info['sample_input']
 	let sample_output = task_info['sample_output']
 	let i = 0

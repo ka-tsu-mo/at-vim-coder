@@ -67,11 +67,20 @@ function! at_vim_coder#delete_cookie()
 endfunction
 
 function! s:prepare_for_contest(contest_id)
+	let contest_to_participate = split(a:contest_id, ':')
+	if len(contest_to_participate) >= 3
+		call at_vim_coder#utils#echo_message('Invalid Contest ID')
+		return []
+	endif
 	let created_task = at_vim_coder#contest#create_tasks(a:contest_id)
 	if empty(created_task)
 		call at_vim_coder#utils#echo_message('Contest was not found')
-		return
+		return []
 	endif
+	return contest_to_participate
+endfunction
+
+function! s:confirm_login()
 	let l:logged_in = s:check_login()
 	if !l:logged_in
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
@@ -83,37 +92,33 @@ function! s:prepare_for_contest(contest_id)
 endfunction
 
 function! at_vim_coder#participate(mode, contest_id)
-	let contest_to_participate = split(a:contest_id, ':')
-	if len(contest_to_participate) >= 3
-		call at_vim_coder#utils#echo_message('Invalid Contest ID')
+	let contest_to_participate = s:prepare_for_contest(a:contest_id)
+	if contest_to_participate == []
 		return
 	endif
+
 	if a:mode == 'new'
 		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
 			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') already exists')
 			let ans = confirm('Review the contest?', "&yes\n&no")
 			if ans == 1
-				call s:prepare_for_contest(contest_to_participate[0])
 				call at_vim_coder#contest#review(contest_to_participate)
-			else
-				return
+				call s:confirm_login()
 			endif
 		else
-			call s:prepare_for_contest(contest_to_participate[0])
 			call at_vim_coder#contest#new(contest_to_participate)
+			call s:confirm_login()
 		endif
-	else
+	else " review
 		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
-			call s:prepare_for_contest(contest_to_participate[0])
 			call at_vim_coder#contest#review(contest_to_participate)
+			call s:confirm_login()
 		else
 			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') was not found')
 			let ans = confirm('Create new workspace?', "&yes\n&no")
 			if ans == 1
-				call s:prepare_for_contest(contest_to_participate[0])
 				call at_vim_coder#contest#new(contest_to_participate)
-			else
-				return
+				call s:confirm_login()
 			endif
 		endif
 	endif

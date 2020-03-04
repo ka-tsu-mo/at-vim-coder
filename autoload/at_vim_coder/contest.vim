@@ -16,7 +16,7 @@ function! at_vim_coder#contest#get_task_info(contest_id, task_id)
 	return task_info
 endfunction
 
-function! at_vim_coder#contest#check_workspace(contest_id)
+function! s:check_workspace(contest_id)
 	let current_dir = getcwd()
 	execute 'lcd ' . g:at_vim_coder_workspace
 	let result = isdirectory(a:contest_id)
@@ -24,7 +24,7 @@ function! at_vim_coder#contest#check_workspace(contest_id)
 	return result
 endfunction
 
-function! at_vim_coder#contest#create_workspace(contest_id)
+function! s:create_workspace(contest_id)
 	let current_dir = getcwd()
 	execute 'lcd ' . g:at_vim_coder_workspace
 	call mkdir(a:contest_id)
@@ -47,8 +47,8 @@ endfunction
 
 function! at_vim_coder#contest#participate(contest_to_participate)
 	let contest_id = a:contest_to_participate[0]
-	if !at_vim_coder#contest#check_workspace(contest_id)
-		call at_vim_coder#contest#create_workspace(contest_id)
+	if !s:check_workspace(contest_id)
+		call s:create_workspace(contest_id)
 	endif
 	let tabnr = s:check_tab_duplicate(contest_id)
 	if tabnr> 0

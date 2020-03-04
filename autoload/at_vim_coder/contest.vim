@@ -45,11 +45,13 @@ function! s:check_tab_duplicate(contest_id)
 	return -1
 endfunction
 
-function! at_vim_coder#contest#new(contest_to_participate) abort
+function! at_vim_coder#contest#participate(contest_to_participate)
 	let contest_id = a:contest_to_participate[0]
-	call at_vim_coder#contest#create_workspace(contest_id)
+	if !at_vim_coder#contest#check_workspace(contest_id)
+		call at_vim_coder#contest#create_workspace(contest_id)
+	endif
 	let tabnr = s:check_tab_duplicate(contest_id)
-	if tabnr > 0
+	if tabnr> 0
 		execute tabnr . 'tabn'
 	else
 		call at_vim_coder#buffer#init_task_list(contest_id)
@@ -60,26 +62,6 @@ function! at_vim_coder#contest#new(contest_to_participate) abort
 		let task_exists = at_vim_coder#buffer#select_task(task_id)
 		if task_exists
 			call at_vim_coder#contest#solve_task()
-		endif
-	endif
-endfunction
-
-function! at_vim_coder#contest#review(contest_to_participate) abort
-	let contest_id = a:contest_to_participate[0]
-	let tabnr = s:check_tab_duplicate(contest_id)
-	if tabnr > 0
-		execute tabnr . 'tabn'
-	else
-		call at_vim_coder#buffer#init_task_list(contest_id)
-		call at_vim_coder#buffer#display_task_list()
-	endif
-	if len(a:contest_to_participate) == 2
-		let task_id = a:contest_to_participate[1]
-		let task_exists = at_vim_coder#buffer#select_task(task_id)
-		if task_exists
-			call at_vim_coder#contest#solve_task()
-		else
-			call at_vim_coder#utils#echo_message('Task not found')
 		endif
 	endif
 endfunction

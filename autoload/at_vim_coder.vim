@@ -92,37 +92,14 @@ function! s:confirm_login()
 	endif
 endfunction
 
-function! at_vim_coder#participate(mode, contest_id)
+function! at_vim_coder#participate(contest_id)
 	let contest_to_participate = s:prepare_for_contest(a:contest_id)
 	if contest_to_participate == []
 		return
 	endif
 
-	if a:mode == 'new'
-		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
-			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') already exists')
-			let ans = confirm('Review the contest?', "&yes\n&no")
-			if ans == 1
-				call at_vim_coder#contest#review(contest_to_participate)
-				call s:confirm_login()
-			endif
-		else
-			call at_vim_coder#contest#new(contest_to_participate)
-			call s:confirm_login()
-		endif
-	else " review
-		if at_vim_coder#contest#check_workspace(contest_to_participate[0])
-			call at_vim_coder#contest#review(contest_to_participate)
-			call s:confirm_login()
-		else
-			call at_vim_coder#utils#echo_message('Directory('.contest_to_participate[0].') was not found')
-			let ans = confirm('Create new workspace?', "&yes\n&no")
-			if ans == 1
-				call at_vim_coder#contest#new(contest_to_participate)
-				call s:confirm_login()
-			endif
-		endif
-	endif
+	call at_vim_coder#contest#participate(contest_to_participate)
+	call s:confirm_login()
 endfunction
 
 let &cpo = s:save_cpo

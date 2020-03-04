@@ -162,7 +162,6 @@ function! s:submit_result_handler_nvim(channel, data, name)
 		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
 	else
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
-		call at_vim_coder#utils#echo_message('Waiting for judge... [' . task_id . ']')
 	endif
 endfunction
 
@@ -180,7 +179,6 @@ function! s:submit_result_handler_vim8(channel)
 		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
 	else
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
-		call at_vim_coder#utils#echo_message('Waiting for judge... [' . task_id . ']')
 	endif
 endfunction
 

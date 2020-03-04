@@ -92,6 +92,23 @@ function! s:get_cookies()
 		return cookies
 endfunction
 
+function! s:check_submission(task_id)
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	if !has_key(task_info, 'submissions')
+		py3 avc.create_submissions(vim.eval('t:contest_id'), vim.eval('a:task_id'))
+		let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	endif
+	let submissions = task_info['submissions']
+	if submissions != []
+		for submission in submissions
+			if submission['status'] == 'AC' && submission['language'] == g:at_vim_coder_language
+				return 'AC'
+			endif
+		endfor
+	endif
+	return ''
+endfunction
+
 function! at_vim_coder#contest#submit(...)
 	if a:0 == 0
 		let task_id = t:task_id
@@ -106,6 +123,13 @@ function! at_vim_coder#contest#submit(...)
 	if !at_vim_coder#check_login()
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
 		return
+	endif
+	if s:check_submission(t:contest_id, task_id) == 'AC'
+		call at_vim_coder#utils#echo_message('You''ve already got AC')
+		let ans = confirm('submit?', "&yes\n&no")
+		if !ans
+			return
+		endif
 	endif
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
 	let task_url = task_info['task_url']
@@ -261,12 +285,18 @@ endfunction
 function! s:create_contest_status(task_id)
 	let contest_status = []
 	let test_result = 't:' . a:task_id . '_test_result'
-	let submit_result = 't:' . a:task_id . '_submit_result'
 
-	if exists(submit_result)
-		call add(contest_status, 'Submit: ' . eval(submit_result))
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	if !has_key(task_info, 'submissions')
+		py3 avc.create_submissions(vim.eval('t:contest_id'), vim.eval('a:task_id'))
+		let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	endif
+	let submissions = task_info['submissions']
+	if submissions == []
+		call add(contest_status, 'Submit: NONE')
 	else
-		call add(contest_status, "Submit: NONE")
+		let latest_submission_status = submissions[0]['status']
+		call add(contest_status, 'Submit: ' . latest_submission_status . '[latest]')
 	endif
 	" insert blank line
 	call add(contest_status, '')

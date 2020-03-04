@@ -26,6 +26,11 @@ class AtVimCoder:
 			'sample_output': [{
 					'value': '',
 					'explanation': ''
+			}],
+			'submissions': [{
+					'time': '',
+					'language': ''
+					'status': '' # AC WA
 			}]
 		}
 		"""
@@ -203,4 +208,32 @@ class AtVimCoder:
 			return sample_output
 		else:
 			return [line for line in pre_tag.splitlines() if line]
+
+	def create_submissions(self, contest_id, task_id):
+		tbody = self._download_submissions_list(contest_id, task_id)
+		if tbody is None:
+			self.tasks[contest_id][task_id]['submissions'] = []
+			return
+		submissions_table = tbody.findAll('tr')
+		submissions_list = []
+		for tr in submissions_table:
+			td = tr.findAll('td')
+			submission = {
+				'time': td[0].text,
+				'language': td[3].text,
+				'status': td[6].text
+			}
+			submissions_list.append(submission)
+		self.tasks[contest_id][task_id]['submissions'] = submissions_list
+
+	def _download_submissions_list(self, contest_id, task_id):
+		task_url = self.tasks[contest_id][task_id]['task_url']
+		task_url = task_url.split('/')
+		url = f'{AT_CODER_BASE_URL}/contests/{contest_id}/submissions/me?f.Task={task_url[-1]}'
+		response = self._session.get(url)
+		bs_submissions_resp = BeautifulSoup(response.text, 'html.parser')
+		if bs_submissions_resp.tbody is None:
+			return None
+		else:
+			return bs_submissions_resp.tbody
 

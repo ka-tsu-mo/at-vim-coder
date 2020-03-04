@@ -2,7 +2,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! at_vim_coder#buffer#get_task_id()
-	return getline('.')[0]
+	let task = getline('.')
+	return task[:stridx(task, ':')-1]
 endfunction
 
 function! at_vim_coder#buffer#init_task_list(contest_id)
@@ -14,6 +15,7 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
 	nmap <buffer><silent> t :<C-u>call at_vim_coder#contest#test('buffer')<CR>
 	nmap <buffer><silent> c :<C-u>call at_vim_coder#contest#check_status('buffer')<CR>
+	nmap <buffer><silent> s :<C-u>call at_vim_coder#contest#submit('buffer')<CR>
 	let t:contest_id = a:contest_id
 	let t:task_id = ''
 	execute 'tcd ' . g:at_vim_coder_workspace
@@ -100,23 +102,12 @@ function! at_vim_coder#buffer#display_task_list() abort
 	let task_list = at_vim_coder#contest#get_task_list(t:contest_id)
 	let t:num_of_tasks = len(task_list)
 	call s:unset_buffer_local_options()
+	%d
 	for task_id in keys(task_list)
 		call append(line('$'), task_id . ': ' . task_list[task_id]['task_title'])
 	endfor
 	0d
 	call s:set_buffer_local_options()
-endfunction
-
-function! at_vim_coder#buffer#get_source_code()
-	let source_code_buf = t:task_id . at_vim_coder#language#get_extension()
-	let win_id = bufwinid(source_code_buf)
-	if win_id < 0
-		return ''
-	else
-		call win_gotoid(win_id)
-		let source_code = getline(1, line('$'))
-		return source_code
-	endif
 endfunction
 
 function! at_vim_coder#buffer#create_status_buf(contest_status)

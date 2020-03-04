@@ -104,6 +104,86 @@ function! at_vim_coder#contest#solve_task()
 	call at_vim_coder#buffer#minimize_task_list()
 endfunction
 
+function! s:get_cookies()
+	if g:at_vim_coder_save_cookies
+		return [g:at_vim_coder_repo_dir, 'cookies']
+	endif
+		py3 avc.get_cookies()
+		return cookies
+endfunction
+
+function! at_vim_coder#contest#submit(...)
+	if a:0 == 0
+		let task_id = t:task_id
+	else
+		let task_id = at_vim_coder#buffer#get_task_id()
+	endif
+	let source_code = task_id . g:at_vim_coder#language#get_extension()
+	if !filereadable(source_code)
+		call at_vim_coder#utils#echo_message('SourceCode was not found')
+		return
+	endif
+	if !at_vim_coder#check_login()
+		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
+		return
+	endif
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
+	let task_url = task_info['task_url']
+	let cookies = s:get_cookies()
+	let submit_info = {
+				\	'contest_id': t:contest_id,
+				\	'task_id': task_id,
+				\	'task_url': task_url,
+				\	'cookies': cookies,
+				\	'language': g:at_vim_coder_language,
+				\	'source_code': [getcwd(), source_code]
+				\}
+	let submit_py = g:at_vim_coder_repo_dir . '/python3/submitter.py'
+	if has('nvim')
+		let job = jobstart('python3 ' . submit_py, {
+					\'on_stdout': function('s:submit_result_handler_nvim'),
+					\'stdout_buffered': v:true})
+		call at_vim_coder#utils#echo_message('Submitting... '. '[' . task_id . ']')
+		call chansend(job, json_encode(submit_info))
+		call chanclose(job, 'stdin')
+	else
+		let job = job_start('python3 '. submit_py, {'close_cb': function('s:submit_result_handler_vim8')})
+		let channel = job_getchannel(job)
+		call at_vim_coder#utils#echo_message('Submitting... '. '[' . task_id . ']')
+		call ch_sendraw(channel, json_encode(submit_info))
+		call ch_close_in(channel)
+	endif
+endfunction
+
+function! s:submit_result_handler_nvim(channel, data, name)
+	let task_id = a:data[0]
+	let submit_result = a:data[1]
+	if submit_result == -1
+		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
+	else
+		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
+		call at_vim_coder#utils#echo_message('Waiting for judge... [' . task_id . ']')
+	endif
+endfunction
+
+function! s:submit_result_handler_vim8(channel)
+	let i = 0
+	while ch_status(a:channel, {'part': 'out'}) == 'buffered'
+		if i == 0
+			let task_id = ch_read(a:channel, {'timeout': 0})
+		else
+			let submit_result = ch_read(a:channel, {'timeout': 0})
+		endif
+		let i += 1
+	endwhile
+	if submit_result == -1
+		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
+	else
+		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
+		call at_vim_coder#utils#echo_message('Waiting for judge... [' . task_id . ']')
+	endif
+endfunction
+
 function! at_vim_coder#contest#test(...)
 	if a:0 == 0
 		let task_id = t:task_id
@@ -111,35 +191,38 @@ function! at_vim_coder#contest#test(...)
 		let task_id = at_vim_coder#buffer#get_task_id()
 	endif
 	if !filereadable(task_id . g:at_vim_coder#language#get_extension())
-		call at_vim_coder#utils#echo_message('SourceCode is not loaded')
+		call at_vim_coder#utils#echo_message('SourceCode was not found')
+		return
+	endif
+	if at_vim_coder#language#needs_compile()
+		if !isdirectory('bin')
+			call mkdir('bin')
+		endif
+		let compile_output = system(at_vim_coder#language#get_compile_command())
+		if v:shell_error != 0
+			call at_vim_coder#utils#echo_message('CE')
+			echo compile_output
+			return
+		endif
+	endif
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
+	let test_info = {}
+	let test_info['task_id'] = task_id
+	let test_info['command'] = at_vim_coder#language#get_exe()
+	let test_info['sample_input'] = task_info['sample_input']
+	let test_info['sample_output'] = task_info['sample_output']
+	let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
+	if has('nvim')
+		let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
+		call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
+		call chansend(job, json_encode(test_info))
+		call chanclose(job, 'stdin')
 	else
-		if at_vim_coder#language#needs_compile()
-			if !isdirectory('bin')
-				call mkdir('bin')
-			endif
-			let compile_output = system(at_vim_coder#language#get_compile_command())
-			if v:shell_error != 0
-				call at_vim_coder#utils#echo_message('CE')
-				echo compile_output
-				return
-			endif
-		endif
-		let test_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
-		let test_info['task_id'] = task_id
-		let test_info['command'] = at_vim_coder#language#get_exe()
-		let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
-		if has('nvim')
-			let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
-			call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
-			call chansend(job, json_encode(test_info))
-			call chanclose(job, 'stdin')
-		else
-			let job = job_start('python3 '. test_py, {'close_cb': function('s:test_result_handler_vim8')})
-			let channel = job_getchannel(job)
-			call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
-			call ch_sendraw(channel, json_encode(test_info))
-			call ch_close_in(channel)
-		endif
+		let job = job_start('python3 '. test_py, {'close_cb': function('s:test_result_handler_vim8')})
+		let channel = job_getchannel(job)
+		call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
+		call ch_sendraw(channel, json_encode(test_info))
+		call ch_close_in(channel)
 	endif
 endfunction
 

@@ -1,12 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 import pickle
-import queue
 import vim
 import sys
 import os
 import re
-import subprocess
 import tex_handler
 
 AT_CODER_BASE_URL = 'https://atcoder.jp'
@@ -22,6 +20,7 @@ class AtVimCoder:
 		}
 		task_info = {
 			'task_title': ''
+			'task_url': ''
 			'problem_info': [], # problem statement, constraints, etc...
 			'sample_input': [],
 			'sample_output': [{
@@ -37,6 +36,10 @@ class AtVimCoder:
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))
+
+	def get_cookies(self):
+		cookies = self._session.cookies.get_dict()
+		vim.command(f'let l:cookies = {cookies}')
 
 	def _get_csrf_token(self):
 		response = self._session.get(AT_CODER_LOGIN_URL)
@@ -63,8 +66,9 @@ class AtVimCoder:
 
 		bs_post_resp = BeautifulSoup(login_result.text, 'html.parser')
 		if bs_post_resp.find(attrs={'class': 'alert-success'}):
+			if vim.eval('g:at_vim_coder_save_cookies'):
+				self._save_cookies()
 			vim.command('let l:login_result = 1')
-			self._save_cookies()
 		else:
 			vim.command('let l:login_result = 0')
 
@@ -124,7 +128,10 @@ class AtVimCoder:
 		sample_output = []
 		if self._locale[:2] == 'ja':
 			for section in sections:
-				title = section.h3.text
+				if section.h3 is not None:
+					title = section.h3.text
+				else:
+					break
 				if title.startswith('入力例'):
 					index = re.search(r'\d+', title).group(0)
 					section.h3.decompose()
@@ -142,7 +149,10 @@ class AtVimCoder:
 					problem_info.extend(lines)
 		else:
 			for section in sections:
-				title = section.h3.text
+				if section.h3 is not None:
+					title = section.h3.text
+				else:
+					break
 				if title.startswith('Sample Input'):
 					index = re.search(r'\d+', title).group(0)
 					section.h3.decompose()
@@ -186,10 +196,11 @@ class AtVimCoder:
 		section.pre.decompose()
 		if is_out:
 			sample_output = {}
-			sample_output['value'] = [line for line in pre_tag.splitlines()]
+			sample_output['value'] = [line for line in pre_tag.splitlines() if line]
 			self._tex_handler.replace_var_text(section)
 			self._add_single_quote_to_code_tag(section)
 			sample_output['explanation'] = [line for line in section.text.splitlines() if line]
 			return sample_output
 		else:
-			return [line for line in pre_tag.splitlines()]
+			return [line for line in pre_tag.splitlines() if line]
+

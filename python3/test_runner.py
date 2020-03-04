@@ -20,9 +20,9 @@ def run_test(test_info):
 			test_result['stdout'] = ''
 			test_result['stderr'] = ''
 		else:
-			test_result['stdout'] = completed_process.stdout
+			test_result['stdout'] = completed_process.stdout.replace('\r\n', '').replace('\n', '')
 			test_result['stderr'] = completed_process.stderr
-			if completed_process.stdout[:-1] == sample_output:
+			if test_result['stdout'] == sample_output:
 				test_result['status'] = 'AC'
 			else:
 				test_result['status'] = 'WA'

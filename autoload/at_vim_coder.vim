@@ -11,18 +11,19 @@ set cpo&vim
 let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
 let g:at_vim_coder_template_file = get(g:, 'at_vim_coder_template_file', '')
 let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++14 (GCC 5.4.1)')
+let g:at_vim_coder_save_cookies = get(g:, 'at_vim_coder_save_cookies', 1)
 let g:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 py3file <sfile>:h:h/python3/at_vim_coder.py
 py3 avc = AtVimCoder()
 
-function! s:check_login()
+function! at_vim_coder#check_login()
 	py3 avc.check_login()
 	return l:logged_in
 endfunction
 
 function! at_vim_coder#echo_login_status()
-	let l:logged_in = s:check_login()
+	let l:logged_in = at_vim_coder#check_login()
 	if !l:logged_in
 		call at_vim_coder#utils#echo_message('Not logged in')
 	elseif l:logged_in
@@ -42,7 +43,7 @@ function! s:get_user_info()
 endfunction
 
 function! at_vim_coder#login()
-	let l:logged_in = s:check_login()
+	let l:logged_in = at_vim_coder#check_login()
 	if !l:logged_in
 		let l:user_info = s:get_user_info()
 		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'))
@@ -57,7 +58,7 @@ function! at_vim_coder#login()
 endfunction
 
 function! at_vim_coder#delete_cookie()
-	let l:logged_in = s:check_login()
+	let l:logged_in = at_vim_coder#check_login()
 	if l:logged_in
 		py3 avc.delete_cookies()
 		call at_vim_coder#utils#echo_message('Deleted local Cookie')
@@ -72,7 +73,7 @@ function! s:prepare_for_contest(contest_id)
 		call at_vim_coder#utils#echo_message('Invalid Contest ID')
 		return []
 	endif
-	let created_task = at_vim_coder#contest#create_tasks(a:contest_id)
+	let created_task = at_vim_coder#contest#create_tasks(contest_to_participate[0])
 	if empty(created_task)
 		call at_vim_coder#utils#echo_message('Contest was not found')
 		return []
@@ -81,7 +82,7 @@ function! s:prepare_for_contest(contest_id)
 endfunction
 
 function! s:confirm_login()
-	let l:logged_in = s:check_login()
+	let l:logged_in = at_vim_coder#check_login()
 	if !l:logged_in
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
 		let ans = confirm('Do you want to login?', "&yes\n&no")

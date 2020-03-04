@@ -50,8 +50,7 @@ function! at_vim_coder#contest#new(contest_to_participate) abort
 	call at_vim_coder#contest#create_workspace(contest_id)
 	let tabnr = s:check_tab_duplicate(contest_id)
 	if tabnr > 0
-		let win_id = win_getid(contest_id.'_task_list', tabnr)
-		call win_gotoid(win_id)
+		execute tabnr . 'tabn'
 	else
 		call at_vim_coder#buffer#init_task_list(contest_id)
 		call at_vim_coder#buffer#display_task_list()
@@ -69,8 +68,7 @@ function! at_vim_coder#contest#review(contest_to_participate) abort
 	let contest_id = a:contest_to_participate[0]
 	let tabnr = s:check_tab_duplicate(contest_id)
 	if tabnr > 0
-		let win_id = win_getid(contest_id.'_task_list', tabnr)
-		call win_gotoid(win_id)
+		execute tabnr . 'tabn'
 	else
 		call at_vim_coder#buffer#init_task_list(contest_id)
 		call at_vim_coder#buffer#display_task_list()

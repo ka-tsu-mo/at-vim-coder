@@ -47,12 +47,12 @@ function! at_vim_coder#login()
 	if !l:logged_in
 		let l:user_info = s:get_user_info()
 		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'))
-		if l:login_result
+		if l:login_success
 			call at_vim_coder#utils#echo_message('Succeeded to log-in')
-		elseif !l:login_result
+		else
 			call at_vim_coder#utils#echo_message('Failed to log-in')
 		endif
-	elseif l:logged_in
+	else
 			call at_vim_coder#utils#echo_message('Already logged in')
 	endif
 endfunction

@@ -62,9 +62,9 @@ class AtVimCoder:
 		if bs_post_resp.find(attrs={'class': 'alert-success'}):
 			if vim.eval('g:at_vim_coder_save_cookies') == 1:
 				self._save_cookies()
-			vim.command('let l:login_result = 1')
+			vim.command('let l:login_success = 1')
 		else:
-			vim.command('let l:login_result = 0')
+			vim.command('let l:login_success = 0')
 
 	def check_login(self):
 		url = AT_CODER_BASE_URL + '/settings'

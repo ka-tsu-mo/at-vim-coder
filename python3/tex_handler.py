@@ -3,7 +3,7 @@ import re
 class AVC_tex_handler:
 	def __init__(self):
 		self._conv_table = [
-				(re.compile(r'\\frac\{.+\}\{.+\}'), self._frac_to_slash),
+				(re.compile(r'\\frac\{.+\}'), self._frac_to_slash),
 				(re.compile(r'_\{[0-9aeijoruvx+-=()]+\}|_[0-9aeijoruvx+-=()]'), self._underscore_to_subscript),
 				(re.compile(r'\^\{[0-9aeijoruvx+-=()]+\}|\^[0-9aeijoruvx+-=()]'), self._caret_to_superscript),
 				(re.compile(r'\\sqrt'), '√'),
@@ -51,18 +51,47 @@ class AVC_tex_handler:
 					if tex_expression[0].search(var_tag.text):
 						var_tag.string = tex_expression[0].sub(tex_expression[1], var_tag.text)
 
+	def test(self, text):
+		if not self._exclude_pattern.match(text):
+			for tex_expression in self._conv_table:
+				if tex_expression[0].search(text):
+					text = tex_expression[0].sub(tex_expression[1], text)
+		print(text)
+
 	def _frac_to_slash(self, matchobj):
-		original_text = matchobj.group(0)
-		args = re.findall(r'\{.+?\}', original_text)
+		text = matchobj.group(0)
 		table = str.maketrans('{}', '()')
-		for index, arg in enumerate(args):
-			if len(arg) == 3:
-				if index == 0: numerator = arg[1]
-				if index == 1: denominator = arg[1]
-			else:
-				if index == 0: numerator = arg.translate(table)
-				if index == 1: denominator = arg.translate(table)
-		return numerator + '/' + denominator
+		for i in range(2):
+			stack = []
+			for j in range(len(text)):
+				if text[j] == '{' or text[j] == '}':
+					stack.append(j)
+				if text[j] == '}':
+					if len(stack) == 2 and text[stack[0]] == '{' and text[stack[1]] == '}':
+						break
+					try:
+						stack.pop()
+						stack.pop()
+					except:
+						return matchobj.group(0)
+			if i == 0:
+				try:
+					if len(text[stack[0]:stack[1]+1]) == 3:
+						numerator = text[stack[0]+1]
+					else:
+						numerator = text[stack[0]:stack[1]+1].translate(table)
+					text = text[stack[1]+1:]
+				except:
+					return matchobj.group(0)
+			if i == 1:
+				try:
+					if len(text[stack[0]:stack[1]+1]) == 3:
+						denominator = text[stack[0]+1]
+					else:
+						denominator = text[stack[0]:stack[1]+1].translate(table)
+					return numerator + '/' + denominator + text[stack[1]+1:]
+				except:
+					return matchobj.group(0)
 
 	def _underscore_to_subscript(self, matchobj):
 		original_text = matchobj.group(0)
@@ -71,3 +100,7 @@ class AVC_tex_handler:
 	def _caret_to_superscript(self, matchobj):
 		original_text = matchobj.group(0)
 		return original_text.translate(self._superscript_table)
+
+if __name__=='__main__':
+	handler = AVC_tex_handler()
+	handler.test(r'\sqrt{\frac{{{}{3}{5}}')

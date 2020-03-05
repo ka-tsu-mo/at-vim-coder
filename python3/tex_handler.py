@@ -44,7 +44,7 @@ class AVC_tex_handler:
 		self._exclude_pattern = re.compile(r'^[a-zA-Z0-9(...)\s,+=-]+$')
 
 	def replace_var_text(self, section):
-		var_tags = section.findAll('var')
+		var_tags = section.find_all('var')
 		for var_tag in var_tags:
 			if var_tag != [] and not self._exclude_pattern.match(var_tag.text):
 				for tex_expression in self._conv_table:

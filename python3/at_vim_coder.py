@@ -79,10 +79,10 @@ class AtVimCoder:
 		if bs_contest_resp is None:
 			vim.command('let l:created_task_list = {}')
 		else:
-			task_table = bs_contest_resp.tbody.findAll('tr')
+			task_table = bs_contest_resp.tbody.find_all('tr')
 			task_list = {}
 			for task in task_table:
-				task_list_info = task.findAll('td')
+				task_list_info = task.find_all('td')
 				task_id = task_list_info[0].text
 				task_title = task_list_info[1].text
 				task_url = task_list_info[1].a.get("href")
@@ -158,12 +158,12 @@ class AtVimCoder:
 		else:
 			span = bs_task_soup.find('span', attrs={'class': 'lang-en'})
 		if span is None:
-			return bs_task_soup.findAll('section')
+			return bs_task_soup.find_all('section')
 		else:
-			return span.findAll('section')
+			return span.find_all('section')
 
 	def _add_single_quote_to_code_tag(self, section):
-		code_tags = section.findAll('code')
+		code_tags = section.find_all('code')
 		for code_tag in code_tags:
 			current_text = code_tag.text
 			code_tag.string = '\'' + current_text + '\''
@@ -183,7 +183,7 @@ class AtVimCoder:
 
 	def get_latest_submission(self, contest_id, task_screen_name):
 		tbody = self._download_submissions_list(contest_id, task_screen_name)
-		td = tbody.tr.findAll('td')
+		td = tbody.tr.find_all('td')
 		submission = {
 			'time': td[0].text,
 			'language': td[3].text,
@@ -196,10 +196,10 @@ class AtVimCoder:
 		if tbody is None:
 			vim.command('let submissions_list = []')
 			return
-		submissions_table = tbody.findAll('tr')
+		submissions_table = tbody.find_all('tr')
 		submissions_list = []
 		for tr in submissions_table:
-			td = tr.findAll('td')
+			td = tr.find_all('td')
 			submission = {
 				'time': td[0].text,
 				'language': td[3].text,

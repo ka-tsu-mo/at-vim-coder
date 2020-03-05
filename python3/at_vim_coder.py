@@ -16,7 +16,7 @@ class AtVimCoder:
 		self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
 		self._tex_handler = tex_handler.AVC_tex_handler()
-		if os.path.exists(self._cookies_path):
+		if os.path.exists(self._cookies_path) and vim.eval('g:at_vim_coder_save_cookies') == 1:
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))
 
@@ -49,7 +49,7 @@ class AtVimCoder:
 
 		bs_post_resp = BeautifulSoup(login_result.text, 'html.parser')
 		if bs_post_resp.find(attrs={'class': 'alert-success'}):
-			if vim.eval('g:at_vim_coder_save_cookies'):
+			if vim.eval('g:at_vim_coder_save_cookies') == 1:
 				self._save_cookies()
 			vim.command('let l:login_result = 1')
 		else:

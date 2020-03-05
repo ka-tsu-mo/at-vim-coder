@@ -15,7 +15,7 @@ def submit_code(submit_info):
 			session.cookies.update(pickle.load(f))
 	else: # dict
 		for key, value in cookies.items():
-			session.cookies.set(key, value.replace('\n', ''))
+			session.cookies.set(key, value)
 
 	contest_id = submit_info.pop('contest_id')
 	submit_url = f'https://atcoder.jp/contests/{contest_id}/submit'

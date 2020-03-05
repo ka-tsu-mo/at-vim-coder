@@ -3,7 +3,6 @@ import re
 class AVC_tex_handler:
 	def __init__(self):
 		self._conv_table = [
-				# todo <code>にシングルクォーとを加える
 				(re.compile(r'\\frac\{.+\}\{.+\}'), self._frac_to_slash),
 				(re.compile(r'_\{[0-9aeijoruvx+-=()]+\}|_[0-9aeijoruvx+-=()]'), self._underscore_to_subscript),
 				(re.compile(r'\^\{[0-9aeijoruvx+-=()]+\}|\^[0-9aeijoruvx+-=()]'), self._caret_to_superscript),

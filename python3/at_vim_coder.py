@@ -12,28 +12,6 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 
 class AtVimCoder:
 	def __init__(self):
-		self.tasks = {}
-		"""
-		tasks = { 'contest_id': task_list }
-		task_list = {
-			'task_id': task_info,
-		}
-		task_info = {
-			'task_title': ''
-			'task_url': ''
-			'problem_info': [], # problem statement, constraints, etc...
-			'sample_input': [],
-			'sample_output': [{
-					'value': '',
-					'explanation': ''
-			}],
-			'submissions': [{
-					'time': '',
-					'language': ''
-					'status': '' # AC WA
-			}]
-		}
-		"""
 		self._session = requests.Session()
 		self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
@@ -85,27 +63,10 @@ class AtVimCoder:
 		else:
 			vim.command('let l:logged_in = 1')
 
-	def get_task_list(self, contest_id):
-		vim.command(f'let l:task_list = {self.tasks[contest_id]}')
-
-	def get_task_info(self, contest_id, task_id):
-		if 'problem_info' not in self.tasks[contest_id][task_id]:
-			task_url = self.tasks[contest_id][task_id]['task_url']
-			self.tasks[contest_id][task_id].update(self._create_task_info(task_url))
-		vim.command(f'let l:task_info = {self.tasks[contest_id][task_id]}')
-
-	def create_tasks(self, contest_id):
-		task_list = self._create_task_list(contest_id)
-		if task_list is None:
-			vim.command('let l:created_tasks = {}')
-		else:
-			self.tasks[contest_id] = task_list
-			vim.command(f'let l:created_tasks = {self.tasks[contest_id]}')
-
-	def _create_task_list(self, contest_id):
+	def create_task_list(self, contest_id):
 		bs_contest_resp = self._download_task_list(contest_id)
 		if bs_contest_resp is None:
-			return None
+			vim.command('let l:created_task_list = {}')
 		else:
 			task_table = bs_contest_resp.tbody.findAll('tr')
 			task_list = {}
@@ -115,7 +76,7 @@ class AtVimCoder:
 				task_title = task_list_info[1].text
 				task_url = task_list_info[1].a.get("href")
 				task_list[task_id] = { 'task_title': task_title, 'task_url': task_url }
-			return task_list
+			vim.command(f'let l:created_task_list= {task_list}')
 
 	def _download_task_list(self, contest_id):
 		url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
@@ -125,7 +86,7 @@ class AtVimCoder:
 		else:
 			return BeautifulSoup(response.text, 'html.parser')
 
-	def _create_task_info(self, url):
+	def create_task_info(self, url):
 		sections = self._download_task(url)
 		task_info = {}
 		problem_info = []
@@ -175,7 +136,7 @@ class AtVimCoder:
 		task_info['problem_info'] = problem_info
 		task_info['sample_input'] = sample_input
 		task_info['sample_output'] = sample_output
-		return task_info
+		vim.command(f'let l:task_info = {task_info}')
 
 	def _download_task(self, url):
 		url = AT_CODER_BASE_URL + url
@@ -209,10 +170,10 @@ class AtVimCoder:
 		else:
 			return [line for line in pre_tag.splitlines() if line]
 
-	def create_submissions(self, contest_id, task_id):
-		tbody = self._download_submissions_list(contest_id, task_id)
+	def create_submissions_list(self, contest_id, task_screen_name):
+		tbody = self._download_submissions_list(contest_id, task_screen_name)
 		if tbody is None:
-			self.tasks[contest_id][task_id]['submissions'] = []
+			vim.command('let submissions_list = []')
 			return
 		submissions_table = tbody.findAll('tr')
 		submissions_list = []
@@ -224,12 +185,10 @@ class AtVimCoder:
 				'status': td[6].text
 			}
 			submissions_list.append(submission)
-		self.tasks[contest_id][task_id]['submissions'] = submissions_list
+		vim.command(f'let submissions_list = {submissions_list}')
 
-	def _download_submissions_list(self, contest_id, task_id):
-		task_url = self.tasks[contest_id][task_id]['task_url']
-		task_url = task_url.split('/')
-		url = f'{AT_CODER_BASE_URL}/contests/{contest_id}/submissions/me?f.Task={task_url[-1]}'
+	def _download_submissions_list(self, contest_id, task_screen_name):
+		url = f'{AT_CODER_BASE_URL}/contests/{contest_id}/submissions/me?f.Task={task_screen_name}'
 		response = self._session.get(url)
 		bs_submissions_resp = BeautifulSoup(response.text, 'html.parser')
 		if bs_submissions_resp.tbody is None:

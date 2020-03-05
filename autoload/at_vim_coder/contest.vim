@@ -1,19 +1,46 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! at_vim_coder#contest#create_tasks(contest_id)
-	py3 avc.create_tasks(vim.eval('a:contest_id'))
-	return created_tasks
+let s:tasks = {}
+"tasks = { 'contest_id': task_list }
+"task_list = {
+"	'task_id': task_info,
+"}
+"task_info = {
+"	'task_title': ''
+"	'task_url': ''
+"	'problem_info': [], # problem statement, constraints, etc...
+"	'sample_input': [],
+"	'sample_output': [{
+"			'value': '',
+"			'explanation': ''
+"	}],
+"	'submissions': [{
+"			'time': '',
+"			'language': ''
+"			'status': '' # AC WA
+"	}]
+"}
+
+function! at_vim_coder#contest#create_task_list(contest_id)
+	py3 avc.create_task_list(vim.eval('a:contest_id'))
+	if !empty(created_task_list)
+		let s:tasks[a:contest_id] = created_task_list
+	endif
+	return created_task_list
 endfunction
 
 function! at_vim_coder#contest#get_task_list(contest_id)
-	py3 avc.get_task_list(vim.eval('a:contest_id'))
-	return task_list
+	return s:tasks[a:contest_id]
 endfunction
 
 function! at_vim_coder#contest#get_task_info(contest_id, task_id)
-	py3 avc.get_task_info(vim.eval('a:contest_id'), vim.eval('a:task_id'))
-	return task_info
+	if !has_key(s:tasks[a:contest_id][a:task_id], 'problem_info')
+		let task_url = s:tasks[a:contest_id][a:task_id]['task_url']
+		py3 avc.create_task_info(vim.eval('task_url'))
+		call extend(s:tasks[a:contest_id][a:task_id], task_info)
+	endif
+	return s:tasks[a:contest_id][a:task_id]
 endfunction
 
 function! s:check_workspace(contest_id)
@@ -92,12 +119,23 @@ function! s:get_cookies()
 		return cookies
 endfunction
 
+function! s:get_task_screen_name(task_id)
+	let task_url = s:tasks[t:contest_id][a:task_id]['task_url']
+	let task_url = split(task_url, '/')
+	return task_url[-1]
+endfunction
+
+function! s:create_submissions_list(task_id)
+	let task_screen_name = s:get_task_screen_name(a:task_id)
+	py3 avc.create_submissions_list(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+	let s:tasks[t:contest_id][a:task_id]['submissions'] = submissions_list
+endfunction
+
 function! s:check_submission(task_id)
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
-	if !has_key(task_info, 'submissions')
-		py3 avc.create_submissions(vim.eval('t:contest_id'), vim.eval('a:task_id'))
-		let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	if !has_key(s:tasks[t:contest_id][a:task_id], 'submissions')
+		call s:create_submissions_list(a:task_id)
 	endif
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
 	let submissions = task_info['submissions']
 	if submissions != []
 		for submission in submissions
@@ -132,12 +170,12 @@ function! at_vim_coder#contest#submit(...)
 		endif
 	endif
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
-	let task_url = task_info['task_url']
+	let task_screen_name = s:get_task_screen_name(task_id)
 	let cookies = s:get_cookies()
 	let submit_info = {
 				\	'contest_id': t:contest_id,
 				\	'task_id': task_id,
-				\	'task_url': task_url,
+				\	'task_screen_name': task_screen_name,
 				\	'cookies': cookies,
 				\	'language': g:at_vim_coder_language,
 				\	'source_code': [getcwd(), source_code]
@@ -286,22 +324,20 @@ function! s:create_contest_status(task_id)
 	let contest_status = []
 	let test_result = 't:' . a:task_id . '_test_result'
 
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
-	if !has_key(task_info, 'submissions')
-		py3 avc.create_submissions(vim.eval('t:contest_id'), vim.eval('a:task_id'))
-		let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
+	if !has_key(s:tasks[t:contest_id][a:task_id], 'submissions')
+		call s:create_submissions_list(a:task_id)
 	endif
+	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
 	let submissions = task_info['submissions']
 	if submissions == []
 		call add(contest_status, 'Submit: NONE')
 	else
-		let latest_submission_status = submissions[0]['status']
+		let latest_submission_status = submissions[-1]['status']
 		call add(contest_status, 'Submit: ' . latest_submission_status . '[latest]')
 	endif
 	" insert blank line
 	call add(contest_status, '')
 
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
 	let sample_input = task_info['sample_input']
 	let sample_output = task_info['sample_output']
 	let i = 0

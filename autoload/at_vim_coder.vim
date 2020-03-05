@@ -73,8 +73,8 @@ function! s:prepare_for_contest(contest_id)
 		call at_vim_coder#utils#echo_message('Invalid Contest ID')
 		return []
 	endif
-	let created_task = at_vim_coder#contest#create_tasks(contest_to_participate[0])
-	if empty(created_task)
+	let created_task_list = at_vim_coder#contest#create_task_list(contest_to_participate[0])
+	if empty(created_task_list)
 		call at_vim_coder#utils#echo_message('Contest was not found')
 		return []
 	endif

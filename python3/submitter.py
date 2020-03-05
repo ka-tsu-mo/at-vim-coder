@@ -27,9 +27,7 @@ def submit_code(submit_info):
 
 	task_id = submit_info.pop('task_id')
 	print(task_id)
-	task_url = submit_info.pop('task_url')
-	task_url = task_url.split('/')
-	task_screen_name = task_url[-1]
+	task_screen_name = submit_info.pop('task_screen_name')
 
 	# get language id
 	language = submit_info.pop('language')

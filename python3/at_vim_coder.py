@@ -181,6 +181,16 @@ class AtVimCoder:
 		else:
 			return [line for line in pre_tag.splitlines() if line]
 
+	def get_latest_submission(self, contest_id, task_screen_name):
+		tbody = self._download_submissions_list(contest_id, task_screen_name)
+		td = tbody.tr.findAll('td')
+		submission = {
+			'time': td[0].text,
+			'language': td[3].text,
+			'status': td[6].text
+		}
+		vim.command(f'let latest_submission = {submission}')
+
 	def create_submissions_list(self, contest_id, task_screen_name):
 		tbody = self._download_submissions_list(contest_id, task_screen_name)
 		if tbody is None:

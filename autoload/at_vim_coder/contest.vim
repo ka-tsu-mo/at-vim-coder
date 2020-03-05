@@ -204,6 +204,9 @@ function! s:submit_result_handler_nvim(channel, data, name)
 		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
 	else
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
+		let task_screen_name = s:get_task_screen_name(task_id)
+		py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+		call add(s:tasks[t:contest_id][task_id]['submissions'], latest_submission)
 	endif
 endfunction
 
@@ -221,6 +224,9 @@ function! s:submit_result_handler_vim8(channel)
 		call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
 	else
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
+		let task_screen_name = s:get_task_screen_name(task_id)
+		py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+		call add(s:tasks[t:contest_id][task_id]['submissions'], latest_submission)
 	endif
 endfunction
 
@@ -333,6 +339,14 @@ function! s:create_contest_status(task_id)
 		call add(contest_status, 'Submit: NONE')
 	else
 		let latest_submission_status = submissions[-1]['status']
+		if latest_submission_status == 'WJ'
+			let task_screen_name = s:get_task_screen_name(a:task_id)
+			py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+			let latest_submission_status = latest_submission['status']
+			if latest_submission_status != 'WJ'
+				s:tasks[t:contest_id][a:task_id]['submissions'][-1]['status'] = latest_submission_status
+			endif
+		endif
 		call add(contest_status, 'Submit: ' . latest_submission_status . '[latest]')
 	endif
 	" insert blank line

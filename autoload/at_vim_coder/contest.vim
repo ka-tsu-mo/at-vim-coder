@@ -124,10 +124,10 @@ function! at_vim_coder#contest#submit(...)
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
 		return
 	endif
-	if s:check_submission(t:contest_id, task_id) == 'AC'
+	if s:check_submission(task_id) == 'AC'
 		call at_vim_coder#utils#echo_message('You''ve already got AC')
 		let ans = confirm('submit?', "&yes\n&no")
-		if !ans
+		if ans != 1
 			return
 		endif
 	endif

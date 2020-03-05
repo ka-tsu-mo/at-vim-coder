@@ -37,6 +37,17 @@ class AtVimCoder:
 		self._session.cookies.clear()
 		os.remove(self._cookies_path)
 
+	def logout(self):
+		csrf_token = self._get_csrf_token()
+		logout_data = {
+			'csrf_token': csrf_token
+		}
+		response = self._session.post(f'{AT_CODER_BASE_URL}/logout', data=logout_data, allow_redirects=False)
+		if response.status_code == 302:
+			vim.command('let logout_success = 1')
+		else:
+			vim.command('let logout_success = 0')
+
 	def login(self, name, password):
 		csrf_token = self._get_csrf_token()
 		login_data = {

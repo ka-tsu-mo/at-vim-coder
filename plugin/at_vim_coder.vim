@@ -14,7 +14,7 @@ function! s:At_Vim_Coder(...)
 		if a:1 ==# 'login'
 			call at_vim_coder#login()
 		elseif a:1 ==# 'logout'
-			call at_vim_coder#delete_cookie()
+			call at_vim_coder#logout()
 		elseif a:1 ==# 'status'
 			call at_vim_coder#echo_login_status()
 		else

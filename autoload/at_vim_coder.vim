@@ -57,11 +57,16 @@ function! at_vim_coder#login()
 	endif
 endfunction
 
-function! at_vim_coder#delete_cookie()
+function! at_vim_coder#logout()
 	let l:logged_in = at_vim_coder#check_login()
 	if l:logged_in
-		py3 avc.delete_cookies()
-		call at_vim_coder#utils#echo_message('Deleted local Cookie')
+		py3 avc.logout()
+		if logout_success
+			call at_vim_coder#utils#echo_message('logged out')
+			if g:at_vim_coder_save_cookies
+				py3 avc.delete_cookies()
+			endif
+		endif
 	else
 		call at_vim_coder#utils#echo_message('You already logged-out')
 	endif

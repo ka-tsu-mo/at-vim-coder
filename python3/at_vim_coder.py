@@ -185,6 +185,7 @@ class AtVimCoder:
 				'status': td[6].text
 			}
 			submissions_list.append(submission)
+		submissions_list = sorted(submissions_list, key=lambda x: x['time'])
 		vim.command(f'let submissions_list = {submissions_list}')
 
 	def _download_submissions_list(self, contest_id, task_screen_name):

@@ -13,7 +13,7 @@ function! at_vim_coder#buffer#init_task_list(contest_id)
 	else
 		execute 'tabnew ' . a:contest_id . '_task_list'
 	endif
-	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task()<CR>
+	nmap <buffer><silent> <CR> :<C-u>call at_vim_coder#contest#solve_task('buffer')<CR>
 	nmap <buffer><silent> t :<C-u>call at_vim_coder#contest#test('buffer')<CR>
 	nmap <buffer><silent> c :<C-u>call at_vim_coder#contest#check_status('buffer')<CR>
 	nmap <buffer><silent> s :<C-u>call at_vim_coder#contest#submit('buffer')<CR>
@@ -39,14 +39,15 @@ function! at_vim_coder#buffer#select_task(task_id)
 	let win_id = bufwinid(t:contest_id.'_task_list')
 	if win_id > 0
 		call win_gotoid(win_id)
-		let pos = char2nr(a:task_id) - 64
-		if 1 <= pos && pos <= t:num_of_tasks
-			call cursor(pos, 0)
-			return 1
-		else
-			return -1
-		endif
+		for i in range(line('$'))
+			call cursor(i, 0)
+			let task_id = at_vim_coder#buffer#get_task_id()
+			if task_id == a:task_id
+				return 1
+			endif
+		endfor
 	endif
+	return 0
 endfunction
 
 function! at_vim_coder#buffer#focus_win(buf_name, cmd)
@@ -60,8 +61,8 @@ function! at_vim_coder#buffer#focus_win(buf_name, cmd)
 	endif
 endfunction
 
-function! at_vim_coder#buffer#load_template()
-	let new_file = t:task_id . at_vim_coder#language#get_extension()
+function! at_vim_coder#buffer#load_template(task_id)
+	let new_file = a:task_id . at_vim_coder#language#get_extension()
 	if g:at_vim_coder_template_file == ''
 		execute 'file ' . new_file
 		%d
@@ -81,12 +82,11 @@ function! at_vim_coder#buffer#minimize_task_list()
 	endif
 endfunction
 
-function! at_vim_coder#buffer#display_task() abort
-	let t:task_id = at_vim_coder#buffer#get_task_id()
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
-	let win_existed = at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
+function! at_vim_coder#buffer#display_task(task_info) abort
+	call at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
 	call s:unset_buffer_local_options()
-	for line in task_info['problem_info']
+	%d
+	for line in a:task_info['problem_info']
 		if line[0] == '['
 			call append(line('$'), '')
 		endif

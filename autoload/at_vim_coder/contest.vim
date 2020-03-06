@@ -88,24 +88,31 @@ function! at_vim_coder#contest#participate(contest_to_participate)
 		let task_id = a:contest_to_participate[1]
 		let task_exists = at_vim_coder#buffer#select_task(task_id)
 		if task_exists
-			call at_vim_coder#contest#solve_task()
+			call at_vim_coder#contest#solve_task(task_id)
 		endif
 	endif
 endfunction
 
-function! at_vim_coder#contest#solve_task()
+function! at_vim_coder#contest#solve_task(task_id)
 	let current_task_id = t:task_id
-	call at_vim_coder#buffer#display_task()
-	let new_task_id = t:task_id
+	if a:task_id == 'buffer'
+		let new_task_id = at_vim_coder#buffer#get_task_id()
+	else
+		let new_task_id = a:task_id
+	endif
+
+	let tab_info = at_vim_coder#contest#get_task_info(t:contest_id, new_task_id)
+	call at_vim_coder#buffer#display_task(tab_info)
 	call at_vim_coder#language#redefine()
 	let current_task_source_code = current_task_id . at_vim_coder#language#get_extension()
-	let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
 	call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
 	setlocal nobuflisted
+
+	let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
 	if filereadable(new_task_source_code)
 		execute 'edit ' . new_task_source_code
 	else
-		call at_vim_coder#buffer#load_template()
+		call at_vim_coder#buffer#load_template(new_task_id)
 	endif
 	setlocal nobuflisted
 	call at_vim_coder#buffer#minimize_task_list()

@@ -86,7 +86,6 @@ function! at_vim_coder#buffer#display_task() abort
 	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, t:task_id)
 	let win_existed = at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
 	call s:unset_buffer_local_options()
-	%d
 	for line in task_info['problem_info']
 		if line[0] == '['
 			call append(line('$'), '')

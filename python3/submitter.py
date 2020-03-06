@@ -1,11 +1,15 @@
 from bs4 import BeautifulSoup
 import requests
+from requests import ConnectionError, HTTPError, Timeout
 import os
 import sys
 import pickle
 import json
 
 def submit_code(submit_info):
+	task_id = submit_info.pop('task_id')
+	print(task_id)
+
 	session = requests.Session()
 	cookies = submit_info.pop('cookies')
 	# set cookies
@@ -21,12 +25,14 @@ def submit_code(submit_info):
 	submit_url = f'https://atcoder.jp/contests/{contest_id}/submit'
 
 	# get csrf token
-	response = session.get(submit_url)
-	bs_get_resp = BeautifulSoup(response.text, 'lxml')
-	csrf_token = bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+	try:
+		response = session.get(submit_url, timeout=3.0)
+	except (ConnectionError, HTTPError, Timeout):
+		print(-1)
+	else:
+		bs_get_resp = BeautifulSoup(response.text, 'lxml')
+		csrf_token = bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
 
-	task_id = submit_info.pop('task_id')
-	print(task_id)
 	task_screen_name = submit_info.pop('task_screen_name')
 
 	# get language id
@@ -52,11 +58,15 @@ def submit_code(submit_info):
 			'sourceCode': source_code
 			}
 
-	submit_result = session.post(submit_url, data=submit_data)
-	if submit_result.status_code != 200:
+	try:
+		submit_result = session.post(submit_url, data=submit_data, timeout=3.0)
+	except (ConnectionError, HTTPError, Timeout):
 		print(-1)
 	else:
-		print(0)
+		if submit_result.status_code != 200:
+			print(-1)
+		else:
+			print(0)
 
 if __name__=='__main__':
 	submit_info = json.load(sys.stdin, strict=False)

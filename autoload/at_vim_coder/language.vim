@@ -31,7 +31,7 @@ function! at_vim_coder#language#init()
         \    'extension': '.py',
         \    'compile_command': '',
         \    'exe': [substitute(python2_path, "\n", '', ''), './{task_id}.py']
-        \  }
+        \  },
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
         \    'compile_command': '',

@@ -424,6 +424,7 @@ function! s:create_contest_status(task_id)
 	let contest_status = []
 	let test_result = 't:' . a:task_id . '_test_result'
 
+	" submission status
 	try
 		let submissions = get(s:tasks[t:contest_id][a:task_id], 'submissions', s:create_submissions_list(a:task_id))
 	catch /^avc_python_err$/
@@ -450,6 +451,7 @@ function! s:create_contest_status(task_id)
 	" insert blank line
 	call add(contest_status, '')
 
+	" test status
 	try
 		let task_info = get(s:tasks[t:contest_id][a:task_id], 'sample_input', s:create_task_info(t:contest_id, a:task_id))
 	catch /^avc_python_err$/
@@ -459,17 +461,9 @@ function! s:create_contest_status(task_id)
 	let sample_input = task_info['sample_input']
 	let sample_output = task_info['sample_output']
 	let i = 0
-	let let
 	while i < len(sample_input)
-		call add(contest_status, 'Sample Input '. string(i+1))
-		for line in sample_input[i]
-			call add(contest_status, line)
-		endfor
-		call add(contest_status, '')
-		call add(contest_status, 'Sample Output ' . string(i+1))
-		for line in sample_output[i]['value']
-			call add(contest_status, line)
-		endfor
+		let box = s:create_sample_io_box(sample_input[i], sample_output[i]['value'], i+1)
+		call extend(contest_status, box)
 		call add(contest_status, '')
 		if !empty(sample_output[i]['explanation'])
 			for line in sample_output[i]['explanation']
@@ -493,6 +487,47 @@ function! s:create_contest_status(task_id)
 		let i += 1
 	endwhile
 	return contest_status
+endfunction
+
+function! s:create_sample_io_box(sample_input, sample_output, num)
+	let input = a:sample_input
+	let output = a:sample_output
+	let height = (len(input) > len(output)) ? len(input) : len(output)
+	let input_max_width = max(map(copy(input), 'strchars(v:val)'))
+	if input_max_width < strchars('Sample Input 1')
+		let input_max_width = strchars('Sample Input 1')
+	endif
+	" +2 -> space and |
+	let input_max_width += 2
+
+	let box = []
+
+	" header
+	let line = 'Sample Input ' . string(a:num)
+	let num_of_space = input_max_width - strchars(line) - 1
+	for i in range(num_of_space)
+		let line .= ' '
+	endfor
+	let line .= '| '
+	let line .= 'Sample Output ' . string(a:num)
+	call add(box, line)
+	let sep = ''
+	for i in range(strchars(line))
+		let sep .= '-'
+	endfor
+	call add(box, sep)
+
+	for i in range(height)
+		let line = get(input, i, '')
+		let num_of_space = input_max_width - strchars(line) - 1
+		for j in range(num_of_space)
+			let line .= ' '
+		endfor
+		let line .= '| '
+		let line .= get(output, i, '')
+		call add(box, line)
+	endfor
+	return box
 endfunction
 
 let &cpo = s:save_cpo

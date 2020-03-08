@@ -60,7 +60,7 @@ function! at_vim_coder#login()
 	endtry
 	if !l:logged_in
 		let l:user_info = s:get_user_info()
-		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'))
+		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'), vim.eval('g:at_vim_coder_save_cookies'))
 		if exists('err')
 			call at_vim_coder#utils#echo_err_msg('Failed to log-in', err)
 			return

@@ -69,6 +69,6 @@ def submit_code(submit_info):
 			print(0)
 
 if __name__=='__main__':
-	submit_info = json.load(sys.stdin, strict=False)
+	submit_info = json.load(sys.stdin)
 	submit_code(submit_info)
 	sys.exit()

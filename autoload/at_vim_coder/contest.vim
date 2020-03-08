@@ -158,7 +158,7 @@ endfunction
 function! s:check_submission(task_id)
 	try
 		let submissions = get(
-					\s:tasks[t:contest_id][a:tasks],
+					\s:tasks[t:contest_id][a:task_id],
 					\'submissions',
 					\s:create_submissions_list(a:task_id))
 	catch /^avc_python_err$/
@@ -189,6 +189,7 @@ function! at_vim_coder#contest#submit(...)
 		let logged_in = at_vim_coder#check_login()
 	catch /^avc_python_err$/
 		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#submit()')
+		call at_vim_coder#utils#echo_err_msg('Submittion aborted')
 		return
 	endtry
 	if !logged_in
@@ -198,7 +199,8 @@ function! at_vim_coder#contest#submit(...)
 	try
 		let isAC = s:check_submission(task_id)
 	catch /^avc_python_err$/
-		call at_vim_coder#utils#echo_message('@at_vim_coder#contest#submit()')
+		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#submit()')
+		call at_vim_coder#utils#echo_err_msg('Submittion aborted')
 		return
 	endtry
 	if isAC
@@ -256,9 +258,9 @@ function! s:submit_result_handler_vim8(channel)
 	let i = 0
 	while ch_status(a:channel, {'part': 'out'}) == 'buffered'
 		if i == 0
-			let task_id = ch_read(a:channel, {'timeout': 0})
+			let task_id = ch_read(a:channel)
 		else
-			let submit_result = ch_read(a:channel, {'timeout': 0})
+			let submit_result = ch_read(a:channel)
 		endif
 		let i += 1
 	endwhile
@@ -334,9 +336,9 @@ function! s:test_result_handler_vim8(channel)
 	let i = 0
 	while ch_status(a:channel, {'part': 'out'}) == 'buffered'
 		if i == 0
-			let task_id = ch_read(a:channel, {'timeout': 0})
+			let task_id = ch_read(a:channel)
 		else
-			let test_result = substitute(ch_read(a:channel, {'timeout': 0}), "'", "\"", "g")
+			let test_result = substitute(ch_read(a:channel), "'", "\"", "g")
 			call add(test_result_list, json_decode(test_result))
 		endif
 		let i += 1

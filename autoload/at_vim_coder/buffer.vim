@@ -100,7 +100,6 @@ endfunction
 function! at_vim_coder#buffer#display_task_list(task_list) abort
 	let t:num_of_tasks = len(a:task_list)
 	call s:unset_buffer_local_options()
-	%d
 	for task_id in keys(a:task_list)
 		call append(line('$'), task_id . ': ' . a:task_list[task_id]['task_title'])
 	endfor

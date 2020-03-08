@@ -17,7 +17,7 @@ class AtVimCoder:
 		self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
 		self._tex_handler = tex_handler.AVC_tex_handler()
-		if os.path.exists(self._cookies_path) and vim.eval('g:at_vim_coder_save_cookies') == 1:
+		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))
 
@@ -61,7 +61,7 @@ class AtVimCoder:
 
 
 
-	def login(self, name, password):
+	def login(self, name, password, save_cookies):
 		try:
 			csrf_token = self._get_csrf_token()
 			login_data = {
@@ -76,7 +76,7 @@ class AtVimCoder:
 			vim.command(f'let err = "{e_str}"')
 		else:
 			if bs_post_resp.find(attrs={'class': 'alert-success'}):
-				if vim.eval('g:at_vim_coder_save_cookies') == 1:
+				if save_cookies:
 					self._save_cookies()
 				vim.command('let l:login_success = 1')
 			else:
@@ -253,7 +253,7 @@ class AtVimCoder:
 	def _download_submissions_list(self, contest_id, task_screen_name):
 		url = f'{AT_CODER_BASE_URL}/contests/{contest_id}/submissions/me?f.Task={task_screen_name}'
 		try:
-			response = self._session.get(url, timeout=0.000001)
+			response = self._session.get(url, timeout=3.0)
 		except (ConnectionError, HTTPError, Timeout):
 			raise
 		else:

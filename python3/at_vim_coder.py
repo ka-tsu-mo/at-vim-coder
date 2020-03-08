@@ -16,7 +16,7 @@ class AtVimCoder:
 		self._session = requests.Session()
 		self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
 		self._locale = vim.eval('$LANG')
-		self._tex_handler = tex_handler.AVC_tex_handler()
+		self._tex_handler = tex_handler.AVCTexHandler()
 		if os.path.exists(self._cookies_path):
 			with open(self._cookies_path, 'rb') as f:
 				self._session.cookies.update(pickle.load(f))

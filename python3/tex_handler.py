@@ -1,6 +1,6 @@
 import re
 
-class AVC_tex_handler:
+class AVCTexHandler:
 	def __init__(self):
 		self._conv_table = [
 				(re.compile(r'\\frac\{.+\}'), self._frac_to_slash),

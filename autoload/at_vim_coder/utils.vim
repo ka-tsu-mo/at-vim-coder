@@ -14,5 +14,14 @@ function! at_vim_coder#utils#echo_err_msg(msg, ...)
 	echohl None
 endfunction
 
+function! at_vim_coder#utils#echo_warning(msg, ...)
+	echohl WarningMsg
+	echomsg '[at-vim-coder] ' . a:msg
+	if exists('a:1')
+		echomsg a:1
+	endif
+	echohl None
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

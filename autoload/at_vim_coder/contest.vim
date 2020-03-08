@@ -293,8 +293,7 @@ function! at_vim_coder#contest#test(...)
 		endif
 		let compile_output = system(at_vim_coder#language#get_compile_command(task_id))
 		if v:shell_error != 0
-			call at_vim_coder#utils#echo_message('CE')
-			echo compile_output
+			call at_vim_coder#utils#echo_warning('CE', compile_output)
 			return
 		endif
 	endif

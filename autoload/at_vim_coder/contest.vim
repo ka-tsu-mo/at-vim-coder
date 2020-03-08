@@ -107,10 +107,18 @@ function! at_vim_coder#contest#participate(contest_to_participate) abort
   if !ready_for_contest
     call s:create_workspace(contest_id)
   endif
-  call at_vim_coder#utils#echo_message('You can''t submit your code without login')
-  let login_success = s:confirm_login()
-  if login_success == -1
+  try
+    let logged_in = at_vim_coder#check_login()
+  catch /^avc_python_err$/
+    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#participate()')
     return
+  endtry
+  if !logged_in
+    call at_vim_coder#utils#echo_message('You can''t submit your code without login')
+    let login_success = s:confirm_login()
+    if login_success == -1
+      return
+    endif
   endif
 
   let tabnr = s:check_tab_duplicate(contest_id)
@@ -351,6 +359,7 @@ function! at_vim_coder#contest#test(...)
   endtry
   let test_info['sample_input'] = task_info['sample_input']
   let test_info['sample_output'] = task_info['sample_output']
+  echo json_encode(test_info)
   let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
   if has('nvim')
     let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
@@ -367,6 +376,7 @@ function! at_vim_coder#contest#test(...)
 endfunction
 
 function! s:test_result_handler_nvim(channel, data, name)
+  echo a:data
   let test_result_list = []
   let task_id = a:data[0]
   for test_result in a:data[1:-2]
@@ -422,7 +432,7 @@ endfunction
 
 function! s:create_contest_status(task_id)
   let contest_status = []
-  let test_result = 't:' . a:task_id . '_test_result'
+  let test_result_var = 't:' . a:task_id . '_test_result'
 
   " submission status
   try
@@ -471,17 +481,18 @@ function! s:create_contest_status(task_id)
       endfor
       call add(contest_status, '')
     endif
-    if exists(test_result)
-      let test_result_status = eval(test_result)[i]['status']
-      call add(contest_status, 'Test Result: ' . test_result_status)
+    if exists(test_result_var)
+      let test_result = eval(test_result_var)
+      let test_result_status = test_result[i]['status']
+      call add(contest_status, 'Test Result ' . string(i+1) . ': ' . test_result_status)
       if test_result_status == 'WA'
         call add(contest_status, 'stdout')
-        call add(contest_status, eval(test_result)[i]['stdout'])
+        call add(contest_status, test_result[i]['stdout'])
         call add(contest_status, 'stderr')
-        call add(contest_status, eval(test_result)[i]['stderr'])
+        call add(contest_status, test_result[i]['stderr'])
       endif
     else
-      call add(contest_status, "Test Result: NONE")
+      call add(contest_status, 'Test Result ' . string(i+1) . ': NONE')
     endif
     call add(contest_status, '')
     let i += 1

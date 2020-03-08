@@ -14,6 +14,8 @@ let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++14 (GCC 5.4.1
 let g:at_vim_coder_save_cookies = get(g:, 'at_vim_coder_save_cookies', 1)
 let g:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
+call at_vim_coder#language#init()
+
 py3file <sfile>:h:h/python3/at_vim_coder.py
 py3 avc = AtVimCoder()
 

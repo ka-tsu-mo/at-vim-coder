@@ -63,7 +63,7 @@ function! at_vim_coder#login()
 		py3 avc.login(vim.eval('l:user_info[0]'), vim.eval('l:user_info[1]'), vim.eval('g:at_vim_coder_save_cookies'))
 		if exists('err')
 			call at_vim_coder#utils#echo_err_msg('Failed to log-in', err)
-			return
+			throw 'avc_python_err'
 		endif
 		if l:login_success
 			call at_vim_coder#utils#echo_message('Succeeded to log-in')
@@ -118,28 +118,12 @@ function! s:prepare_for_contest(contest_id)
 	return contest_to_participate
 endfunction
 
-function! s:confirm_login()
-	call at_vim_coder#utils#echo_message('You can''t submit your code without login')
-	let ans = confirm('Do you want to login?', "&yes\n&no")
-	if ans == 1
-		call at_vim_coder#login()
-	endif
-endfunction
-
 function! at_vim_coder#participate(contest_id)
 	let contest_to_participate = s:prepare_for_contest(a:contest_id)
 	if contest_to_participate == []
 		return
 	endif
 	call at_vim_coder#contest#participate(contest_to_participate)
-	try
-		let logged_in = at_vim_coder#check_login()
-		if !logged_in
-			call s:confirm_login()
-		endif
-	catch /^avc_python_err$/
-		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#participate()')
-	endtry
 endfunction
 
 let &cpo = s:save_cpo

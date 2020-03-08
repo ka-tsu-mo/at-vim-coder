@@ -45,6 +45,10 @@ function! s:create_task_info(contest_id, task_id)
 endfunction
 
 function! s:check_workspace(contest_id)
+	if !isdirectory(g:at_vim_coder_workspace)
+		call at_vim_coder#utils#echo_err_msg('Can''t find directory(' . g:at_vim_coder_workspace . ')')
+		throw 'avc_workspace_err'
+	endif
 	let current_dir = getcwd()
 	execute 'lcd ' . g:at_vim_coder_workspace
 	let result = isdirectory(a:contest_id)
@@ -73,11 +77,40 @@ function! s:check_tab_duplicate(contest_id)
 	return -1
 endfunction
 
+function! s:confirm_login()
+	let ans = confirm('Do you want to login?', "&yes\n&no")
+	if ans == 1
+		try
+			call at_vim_coder#login()
+		catch /^avc_python_err$/
+			call at_vim_coder#utils#echo_err_msg('contest.vim/s:confirm_login()')
+			let login_success = 0
+			return login_success
+		endtry
+	endif
+	let login_success = 1
+	return login_success
+endfunction
+
 function! at_vim_coder#contest#participate(contest_to_participate) abort
+	" prepare for contest
 	let contest_id = a:contest_to_participate[0]
-	if !s:check_workspace(contest_id)
+	try
+		let ready_for_contest = s:check_workspace(contest_id)
+	catch /^avc_workspace_err$/
+		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#participate()')
+		call at_vim_coder#utils#echo_err_msg('Please create workspace')
+		return
+	endtry
+	if !ready_for_contest
 		call s:create_workspace(contest_id)
 	endif
+	call at_vim_coder#utils#echo_message('You can''t submit your code without login')
+	let login_success = s:confirm_login()
+	if !login_success
+		return
+	endif
+
 	let tabnr = s:check_tab_duplicate(contest_id)
 	if tabnr > 0
 		execute tabnr . 'tabn'
@@ -85,6 +118,8 @@ function! at_vim_coder#contest#participate(contest_to_participate) abort
 		call at_vim_coder#buffer#init_task_list(contest_id)
 		call at_vim_coder#buffer#display_task_list(s:tasks[contest_id])
 	endif
+
+	" if specified task ID e.g abc:A
 	if len(a:contest_to_participate) == 2
 		let task_id = a:contest_to_participate[1]
 		let task_exists = at_vim_coder#buffer#select_task(task_id)

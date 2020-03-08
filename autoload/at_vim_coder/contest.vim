@@ -359,7 +359,6 @@ function! at_vim_coder#contest#test(...)
   endtry
   let test_info['sample_input'] = task_info['sample_input']
   let test_info['sample_output'] = task_info['sample_output']
-  echo json_encode(test_info)
   let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
   if has('nvim')
     let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
@@ -376,7 +375,6 @@ function! at_vim_coder#contest#test(...)
 endfunction
 
 function! s:test_result_handler_nvim(channel, data, name)
-  echo a:data
   let test_result_list = []
   let task_id = a:data[0]
   for test_result in a:data[1:-2]

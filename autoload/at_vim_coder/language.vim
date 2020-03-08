@@ -9,17 +9,17 @@ function! at_vim_coder#language#init()
   let s:language = {
         \  'C++14 (GCC 5.4.1)': {
         \    'extension': '.cpp',
-        \    'complie_command': 'g++ -std=gnu++1y -O2 -I/opt/boost/gcc/include -L/opt/boost/gcc/lib -o ./bin/{task_id} {task_id}.cpp',
+        \    'compile_command': 'g++ -std=gnu++1y -O2 -I/opt/boost/gcc/include -L/opt/boost/gcc/lib -o ./bin/{task_id} {task_id}.cpp',
         \    'exe': ['./bin/{task_id}']
         \  },
         \  'C (GCC 5.4.1)': {
         \    'extension': '.c',
-        \    'complie_command': 'gcc -std=gnu11 -O2 -o ./bin/{task_id} {task_id}.c -lm',
+        \    'compile_command': 'gcc -std=gnu11 -O2 -o ./bin/{task_id} {task_id}.c -lm',
         \    'exe': ['./bin/{task_id}']
         \  },
         \  'C (Clang 3.8.0)': {
         \    'extension': '.c',
-        \    'complie_command': 'clang -O2 {task_id}.c -o ./bin/{task_id} -lm',
+        \    'compile_command': 'clang -O2 {task_id}.c -o ./bin/{task_id} -lm',
         \    'exe': ['./bin/{task_id}']
         \  },
         \  'Go (1.6)': {
@@ -29,15 +29,15 @@ function! at_vim_coder#language#init()
         \  },
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
-        \    'complie_command': '',
+        \    'compile_command': '',
         \    'exe': [substitute(python3_path, "\n", '', ''), './{task_id}.py']
         \  }
         \}
 endfunction
 
 function! at_vim_coder#language#get_compile_command(task_id)
-  let complie_command = s:language[g:at_vim_coder_language]['complie_command']
-  return substitute(complie_command, '{task_id}', a:task_id, 'g')
+  let compile_command = s:language[g:at_vim_coder_language]['compile_command']
+  return substitute(compile_command, '{task_id}', a:task_id, 'g')
 endfunction
 
 function! at_vim_coder#language#get_extension()
@@ -53,7 +53,7 @@ function! at_vim_coder#language#get_exe(task_id)
 endfunction
 
 function! at_vim_coder#language#needs_compile()
-  return s:language[g:at_vim_coder_language]['complie_command'] != ''
+  return s:language[g:at_vim_coder_language]['compile_command'] != ''
 endfunction
 
 let &cpo = s:save_cpo

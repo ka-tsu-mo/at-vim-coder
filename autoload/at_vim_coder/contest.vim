@@ -84,11 +84,13 @@ function! s:confirm_login()
 			call at_vim_coder#login()
 		catch /^avc_python_err$/
 			call at_vim_coder#utils#echo_err_msg('contest.vim/s:confirm_login()')
-			let login_success = 0
+			let login_success = -1
 			return login_success
 		endtry
+		let login_success = 1
+	else
+		let login_success = 0
 	endif
-	let login_success = 1
 	return login_success
 endfunction
 
@@ -107,7 +109,7 @@ function! at_vim_coder#contest#participate(contest_to_participate) abort
 	endif
 	call at_vim_coder#utils#echo_message('You can''t submit your code without login')
 	let login_success = s:confirm_login()
-	if !login_success
+	if login_success == -1
 		return
 	endif
 
@@ -229,7 +231,10 @@ function! at_vim_coder#contest#submit(...)
 	endtry
 	if !logged_in
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
-		return
+		let login_success = s:confirm_login()
+		if !login_success
+			return
+		endif
 	endif
 	try
 		let isAC = s:check_submission(task_id)

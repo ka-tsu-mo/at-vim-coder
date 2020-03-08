@@ -253,7 +253,7 @@ class AtVimCoder:
 	def _download_submissions_list(self, contest_id, task_screen_name):
 		url = f'{AT_CODER_BASE_URL}/contests/{contest_id}/submissions/me?f.Task={task_screen_name}'
 		try:
-			response = self._session.get(url, timeout=3.0)
+			response = self._session.get(url, timeout=0.000001)
 		except (ConnectionError, HTTPError, Timeout):
 			raise
 		else:

@@ -148,7 +148,7 @@ function! s:create_submissions_list(task_id)
 	let task_screen_name = s:get_task_screen_name(a:task_id)
 	py3 avc.create_submissions_list(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
 	if exists('err')
-		call at_vim_coder#utils#echo_err_msg('Failed to create submissions list')
+		call at_vim_coder#utils#echo_err_msg('Failed to create submissions list', err)
 		throw 'avc_python_err'
 	endif
 	let s:tasks[t:contest_id][a:task_id]['submissions'] = submissions_list
@@ -377,7 +377,11 @@ function! s:create_contest_status(task_id)
 	let contest_status = []
 	let test_result = 't:' . a:task_id . '_test_result'
 
-	let submissions = get(s:tasks[t:contest_id][a:task_id], 'submissions', s:create_submissions_list(a:task_id))
+	try
+		let submissions = get(s:tasks[t:contest_id][a:task_id], 'submissions', s:create_submissions_list(a:task_id))
+	catch /^avc_python_err$/
+		let submissions = [{'status': 'ERROR[at-vim-coder]'}]
+	endtry
 	if submissions == []
 		call add(contest_status, 'Submit: NONE')
 	else

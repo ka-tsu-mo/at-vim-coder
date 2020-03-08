@@ -52,8 +52,7 @@ class AtVimCoder:
 			response = self._session.post(f'{AT_CODER_BASE_URL}/logout', data=logout_data, allow_redirects=False, timeout=3.0)
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let logout_success = 0')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			if response.status_code == 302:
 				vim.command('let logout_success = 1')
@@ -74,8 +73,7 @@ class AtVimCoder:
 			bs_post_resp = BeautifulSoup(login_result.text, 'html.parser')
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let login_success = 0')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			if bs_post_resp.find(attrs={'class': 'alert-success'}):
 				if vim.eval('g:at_vim_coder_save_cookies') == 1:
@@ -91,8 +89,7 @@ class AtVimCoder:
 			response = self._session.get(url, allow_redirects=False, timeout=3.0)
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let logged_in = 0')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			if response.status_code == 302:
 				vim.command('let l:logged_in = 0')
@@ -105,8 +102,7 @@ class AtVimCoder:
 			bs_contest_resp = self._download_task_list(contest_id)
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let l:created_task_list = {}')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			if bs_contest_resp is None:
 				vim.command('let l:created_task_list = {}')
@@ -133,59 +129,48 @@ class AtVimCoder:
 			else:
 				return BeautifulSoup(response.text, 'html.parser')
 
+	def _get_section_title_by_language(self):
+		section_titles = {}
+		if self._locale[:2] == 'ja':
+			section_titles['sample_input'] = '入力例'
+			section_titles['sample_output'] = '出力例'
+		else:
+			section_titles['sample_input'] = 'Sample Input'
+			section_titles['sample_output'] = 'Sample Output'
+		return section_titles
+
 	def create_task_info(self, url):
 		try:
 			sections = self._download_task(url)
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let task_info = {}')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			task_info = {}
 			problem_info = []
 			sample_input = []
 			sample_output = []
-			if self._locale[:2] == 'ja':
-				for section in sections:
-					if section.h3 is not None:
-						title = section.h3.text
-					else:
-						break
-					if title.startswith('入力例'):
-						index = re.search(r'\d+', title).group(0)
-						section.h3.decompose()
-						sample_input.insert(int(index), self._create_sample_io(section, False))
-					elif title.startswith('出力例'):
-						index = re.search(r'\d+', title).group(0)
-						section.h3.decompose()
-						sample_output.insert(int(index), self._create_sample_io(section, True))
-					else:
-						problem_info.append('['+section.h3.text+']')
-						section.h3.decompose()
-						self._tex_handler.replace_var_text(section)
-						self._add_single_quote_to_code_tag(section)
-						lines = [line.strip() for line in section.text.splitlines() if line]
-						problem_info.extend(lines)
-			else:
-				for section in sections:
-					if section.h3 is not None:
-						title = section.h3.text
-					else:
-						break
-					if title.startswith('Sample Input'):
-						index = re.search(r'\d+', title).group(0)
-						section.h3.decompose()
-						sample_input.insert(int(index), self._create_sample_io(section, False))
-					elif title.startswith('Sample Output'):
-						index = re.search(r'\d+', title).group(0)
-						section.h3.decompose()
-						sample_output.insert(int(index), self._create_sample_io(section, True))
-					else:
-						problem_info.append('['+section.h3.text+']')
-						section.h3.decompose()
-						self._tex_handler.replace_var_text(section)
-						lines = [line.strip() for line in section.text.splitlines() if line]
-						problem_info.extend(lines)
+			section_titles = self._get_section_title_by_language()
+			for section in sections:
+				if section.h3 is not None:
+					title = section.h3.text
+				else:
+					break
+				if title.startswith(section_titles['sample_input']):
+					index = re.search(r'\d+', title).group(0)
+					section.h3.decompose()
+					sample_input.insert(int(index), self._create_sample_io(section, False))
+				elif title.startswith(section_titles['sample_output']):
+					index = re.search(r'\d+', title).group(0)
+					section.h3.decompose()
+					sample_output.insert(int(index), self._create_sample_io(section, True))
+				else:
+					problem_info.append('['+section.h3.text+']')
+					section.h3.decompose()
+					self._tex_handler.replace_var_text(section)
+					self._add_single_quote_to_code_tag(section)
+					lines = [line.strip() for line in section.text.splitlines() if line]
+					problem_info.extend(lines)
 			task_info['problem_info'] = problem_info
 			task_info['sample_input'] = sample_input
 			task_info['sample_output'] = sample_output
@@ -231,14 +216,8 @@ class AtVimCoder:
 		try:
 			tbody = self._download_submissions_list(contest_id, task_screen_name)
 		except (ConnectionError, HTTPError, Timeout) as e:
-			submission = {
-					'time': '',
-					'language': '',
-					'status': ''
-			}
 			e_str = str(e)
-			vim.command(f'let latest_submission = {submission}')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			td = tbody.tr.find_all('td')
 			submission = {
@@ -253,8 +232,7 @@ class AtVimCoder:
 			tbody = self._download_submissions_list(contest_id, task_screen_name)
 		except (ConnectionError, HTTPError, Timeout) as e:
 			e_str = str(e)
-			vim.command('let submissions_list = []')
-			vim.command(f'call at_vim_coder#utils#echo_err_msg("{e_str}")')
+			vim.command(f'let err = "{e_str}"')
 		else:
 			if tbody is None:
 				vim.command('let submissions_list = []')

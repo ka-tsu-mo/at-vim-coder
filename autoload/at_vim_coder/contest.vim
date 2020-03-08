@@ -24,23 +24,24 @@ let s:tasks = {}
 
 function! at_vim_coder#contest#create_task_list(contest_id)
 	py3 avc.create_task_list(vim.eval('a:contest_id'))
+	if exists('err')
+		call at_vim_coder#utils#echo_err_msg('Failed to create task list', err)
+		throw 'avc_python_err'
+	endif
 	if !empty(created_task_list)
 		let s:tasks[a:contest_id] = created_task_list
 	endif
 	return created_task_list
 endfunction
 
-function! at_vim_coder#contest#get_task_list(contest_id)
-	return s:tasks[a:contest_id]
-endfunction
-
-function! at_vim_coder#contest#get_task_info(contest_id, task_id)
-	if !has_key(s:tasks[a:contest_id][a:task_id], 'problem_info')
-		let task_url = s:tasks[a:contest_id][a:task_id]['task_url']
-		py3 avc.create_task_info(vim.eval('task_url'))
-		call extend(s:tasks[a:contest_id][a:task_id], task_info)
+function! s:create_task_info(contest_id, task_id)
+	let task_url = s:tasks[a:contest_id][a:task_id]['task_url']
+	py3 avc.create_task_info(vim.eval('task_url'))
+	if exists('err')
+		call at_vim_coder#utils#echo_err_msg('Failed to create task info', err)
+		throw 'avc_python_err'
 	endif
-	return s:tasks[a:contest_id][a:task_id]
+	return task_info
 endfunction
 
 function! s:check_workspace(contest_id)
@@ -72,17 +73,17 @@ function! s:check_tab_duplicate(contest_id)
 	return -1
 endfunction
 
-function! at_vim_coder#contest#participate(contest_to_participate)
+function! at_vim_coder#contest#participate(contest_to_participate) abort
 	let contest_id = a:contest_to_participate[0]
 	if !s:check_workspace(contest_id)
 		call s:create_workspace(contest_id)
 	endif
 	let tabnr = s:check_tab_duplicate(contest_id)
-	if tabnr> 0
+	if tabnr > 0
 		execute tabnr . 'tabn'
 	else
 		call at_vim_coder#buffer#init_task_list(contest_id)
-		call at_vim_coder#buffer#display_task_list()
+		call at_vim_coder#buffer#display_task_list(s:tasks[contest_id])
 	endif
 	if len(a:contest_to_participate) == 2
 		let task_id = a:contest_to_participate[1]
@@ -93,7 +94,7 @@ function! at_vim_coder#contest#participate(contest_to_participate)
 	endif
 endfunction
 
-function! at_vim_coder#contest#solve_task(task_id)
+function! at_vim_coder#contest#solve_task(task_id) abort
 	let current_task_id = t:task_id
 	if a:task_id == 'buffer'
 		let new_task_id = at_vim_coder#buffer#get_task_id()
@@ -101,14 +102,24 @@ function! at_vim_coder#contest#solve_task(task_id)
 		let new_task_id = a:task_id
 	endif
 
-	let tab_info = at_vim_coder#contest#get_task_info(t:contest_id, new_task_id)
-	call at_vim_coder#buffer#display_task(tab_info)
-	call at_vim_coder#language#redefine()
+	try
+		let task_info = get(
+					\s:tasks[t:contest_id][new_task_id],
+					\'problem_info',
+					\s:create_task_info(t:contest_id, new_task_id)
+					\)
+	catch /^avc_python_err$/
+		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#solve_task')
+		return
+	endtry
+	call at_vim_coder#buffer#display_task(task_info)
 	let current_task_source_code = current_task_id . at_vim_coder#language#get_extension()
-	call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
-	setlocal nobuflisted
-
 	let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
+	if current_task_id == ''
+		let current_task_source_code = new_task_source_code
+	endif
+	call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
+
 	if filereadable(new_task_source_code)
 		execute 'edit ' . new_task_source_code
 	else
@@ -116,6 +127,7 @@ function! at_vim_coder#contest#solve_task(task_id)
 	endif
 	setlocal nobuflisted
 	call at_vim_coder#buffer#minimize_task_list()
+	let t:task_id = new_task_id
 endfunction
 
 function! s:get_cookies()
@@ -135,23 +147,31 @@ endfunction
 function! s:create_submissions_list(task_id)
 	let task_screen_name = s:get_task_screen_name(a:task_id)
 	py3 avc.create_submissions_list(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+	if exists('err')
+		call at_vim_coder#utils#echo_err_msg('Failed to create submissions list')
+		throw 'avc_python_err'
+	endif
 	let s:tasks[t:contest_id][a:task_id]['submissions'] = submissions_list
+	return submissions_list
 endfunction
 
 function! s:check_submission(task_id)
-	if !has_key(s:tasks[t:contest_id][a:task_id], 'submissions')
-		call s:create_submissions_list(a:task_id)
-	endif
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
-	let submissions = task_info['submissions']
+	try
+		let submissions = get(
+					\s:tasks[t:contest_id][a:tasks],
+					\'submissions',
+					\s:create_submissions_list(a:task_id))
+	catch /^avc_python_err$/
+		throw 'avc_python_err'
+	endtry
 	if submissions != []
 		for submission in submissions
 			if submission['status'] == 'AC' && submission['language'] == g:at_vim_coder_language
-				return 'AC'
+				return 1
 			endif
 		endfor
 	endif
-	return ''
+	return 0
 endfunction
 
 function! at_vim_coder#contest#submit(...)
@@ -165,18 +185,29 @@ function! at_vim_coder#contest#submit(...)
 		call at_vim_coder#utils#echo_message('SourceCode was not found')
 		return
 	endif
-	if !at_vim_coder#check_login()
+	try
+		let logged_in = at_vim_coder#check_login()
+	catch /^avc_python_err$/
+		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#submit()')
+		return
+	endtry
+	if !logged_in
 		call at_vim_coder#utils#echo_message('You can''t submit your code without login')
 		return
 	endif
-	if s:check_submission(task_id) == 'AC'
+	try
+		let isAC = s:check_submission(task_id)
+	catch /^avc_python_err$/
+		call at_vim_coder#utils#echo_message('@at_vim_coder#contest#submit()')
+		return
+	endtry
+	if isAC
 		call at_vim_coder#utils#echo_message('You''ve already got AC')
 		let ans = confirm('submit?', "&yes\n&no")
 		if ans != 1
 			return
 		endif
 	endif
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
 	let task_screen_name = s:get_task_screen_name(task_id)
 	let cookies = s:get_cookies()
 	let submit_info = {
@@ -213,6 +244,10 @@ function! s:submit_result_handler_nvim(channel, data, name)
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
 		let task_screen_name = s:get_task_screen_name(task_id)
 		py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+		if exists('err')
+			call at_vim_coder#utils#echo_err_msg('Failed to get latest submission', err)
+			return
+		endif
 		call add(s:tasks[t:contest_id][task_id]['submissions'], latest_submission)
 	endif
 endfunction
@@ -233,6 +268,10 @@ function! s:submit_result_handler_vim8(channel)
 		call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
 		let task_screen_name = s:get_task_screen_name(task_id)
 		py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+		if exists('err')
+			call at_vim_coder#utils#echo_err_msg('Failed to get latest submission', err)
+			return
+		endif
 		call add(s:tasks[t:contest_id][task_id]['submissions'], latest_submission)
 	endif
 endfunction
@@ -243,7 +282,8 @@ function! at_vim_coder#contest#test(...)
 	else
 		let task_id = at_vim_coder#buffer#get_task_id()
 	endif
-	if !filereadable(task_id . g:at_vim_coder#language#get_extension())
+	let file_name = task_id . g:at_vim_coder#language#get_extension()
+	if !filereadable(file_name)
 		call at_vim_coder#utils#echo_message('SourceCode was not found')
 		return
 	endif
@@ -251,17 +291,17 @@ function! at_vim_coder#contest#test(...)
 		if !isdirectory('bin')
 			call mkdir('bin')
 		endif
-		let compile_output = system(at_vim_coder#language#get_compile_command())
+		let compile_output = system(at_vim_coder#language#get_compile_command(task_id))
 		if v:shell_error != 0
 			call at_vim_coder#utils#echo_message('CE')
 			echo compile_output
 			return
 		endif
 	endif
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, task_id)
 	let test_info = {}
 	let test_info['task_id'] = task_id
-	let test_info['command'] = at_vim_coder#language#get_exe()
+	let test_info['command'] = at_vim_coder#language#get_exe(task_id)
+	let task_info = get(s:tasks[t:contest_id][task_id], 'sample_input', s:create_task_info(t:contest_id, task_id))
 	let test_info['sample_input'] = task_info['sample_input']
 	let test_info['sample_output'] = task_info['sample_output']
 	let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
@@ -337,11 +377,7 @@ function! s:create_contest_status(task_id)
 	let contest_status = []
 	let test_result = 't:' . a:task_id . '_test_result'
 
-	if !has_key(s:tasks[t:contest_id][a:task_id], 'submissions')
-		call s:create_submissions_list(a:task_id)
-	endif
-	let task_info = at_vim_coder#contest#get_task_info(t:contest_id, a:task_id)
-	let submissions = task_info['submissions']
+	let submissions = get(s:tasks[t:contest_id][a:task_id], 'submissions', s:create_submissions_list(a:task_id))
 	if submissions == []
 		call add(contest_status, 'Submit: NONE')
 	else
@@ -349,6 +385,10 @@ function! s:create_contest_status(task_id)
 		if latest_submission_status == 'WJ'
 			let task_screen_name = s:get_task_screen_name(a:task_id)
 			py3 avc.get_latest_submission(vim.eval('t:contest_id'), vim.eval('task_screen_name'))
+			if exists('err')
+				call at_vim_coder#utils#echo_err_msg('Failed to get latest submission', err)
+				let latest_submission['status'] = 'ERROR[at-vim-coder]'
+			endif
 			let latest_submission_status = latest_submission['status']
 			if latest_submission_status != 'WJ'
 				s:tasks[t:contest_id][a:task_id]['submissions'][-1]['status'] = latest_submission_status
@@ -359,6 +399,7 @@ function! s:create_contest_status(task_id)
 	" insert blank line
 	call add(contest_status, '')
 
+	let task_info = get(s:tasks[t:contest_id][a:task_id], 'sample_input', s:create_task_info(t:contest_id, a:task_id))
 	let sample_input = task_info['sample_input']
 	let sample_output = task_info['sample_output']
 	let i = 0

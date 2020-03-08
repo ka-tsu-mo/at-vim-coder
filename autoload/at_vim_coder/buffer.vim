@@ -86,11 +86,14 @@ function! at_vim_coder#buffer#display_task(task_info) abort
 	call at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
 	call s:unset_buffer_local_options()
 	%d
+	let index = 1
 	for line in a:task_info['problem_info']
 		if line[0] == '['
 			call append(line('$'), '')
+			let index += 1
 		endif
-		call append(line('$'), line)
+		call setline(index, line)
+		let index += 1
 	endfor
 	call cursor(0, 0)
 	0d
@@ -100,10 +103,11 @@ endfunction
 function! at_vim_coder#buffer#display_task_list(task_list) abort
 	let t:num_of_tasks = len(a:task_list)
 	call s:unset_buffer_local_options()
+	let index = 1
 	for task_id in keys(a:task_list)
-		call append(line('$'), task_id . ': ' . a:task_list[task_id]['task_title'])
+		call setline(index, task_id . ': ' . a:task_list[task_id]['task_title'])
+		let index += 1
 	endfor
-	0d
 	call s:set_buffer_local_options()
 endfunction
 

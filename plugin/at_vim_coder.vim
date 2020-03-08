@@ -1,7 +1,7 @@
 scriptencoding utf-8
 
 if exists('g:loaded_at_vim_coder')
-	finish
+  finish
 endif
 let g:loaded_at_vim_coder = 1
 
@@ -10,19 +10,19 @@ set cpo&vim
 
 command! -nargs=+ Avc call <SID>At_Vim_Coder(<f-args>)
 function! s:At_Vim_Coder(...)
-	if a:0 == 1
-		if a:1 ==# 'login'
-			call at_vim_coder#login()
-		elseif a:1 ==# 'logout'
-			call at_vim_coder#logout()
-		elseif a:1 ==# 'status'
-			call at_vim_coder#echo_login_status()
-		else
-			call at_vim_coder#participate(a:1)
-		endif
-	else
-		call at_vim_coder#utils#echo_message('Invalid argument')
-	endif
+  if a:0 == 1
+    if a:1 ==# 'login'
+      call at_vim_coder#login()
+    elseif a:1 ==# 'logout'
+      call at_vim_coder#logout()
+    elseif a:1 ==# 'status'
+      call at_vim_coder#echo_login_status()
+    else
+      call at_vim_coder#participate(a:1)
+    endif
+  else
+    call at_vim_coder#utils#echo_message('Invalid argument')
+  endif
 endfunction
 
 nnoremap <silent> <Plug>(at-vim-coder-run-test)      :<C-u>call at_vim_coder#contest#test()<CR>

@@ -234,7 +234,7 @@ function! at_vim_coder#contest#submit(...)
     let logged_in = at_vim_coder#check_login()
   catch /^avc_python_err$/
     call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#submit()')
-    call at_vim_coder#utils#echo_err_msg('Submittion aborted')
+    call at_vim_coder#utils#echo_err_msg('Submission aborted')
     return
   endtry
   if !logged_in
@@ -248,7 +248,7 @@ function! at_vim_coder#contest#submit(...)
     let isAC = s:check_submission(task_id)
   catch /^avc_python_err$/
     call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#submit()')
-    call at_vim_coder#utils#echo_err_msg('Submittion aborted')
+    call at_vim_coder#utils#echo_err_msg('Submission aborted')
     return
   endtry
   if isAC
@@ -438,6 +438,7 @@ function! s:create_contest_status(task_id)
   catch /^avc_python_err$/
     let submissions = [{'status': 'ERROR[at-vim-coder]'}]
   endtry
+  call filter(submissions, 'v:val["language"] == g:at_vim_coder_language')
   if submissions == []
     call add(contest_status, 'Submit: NONE')
   else

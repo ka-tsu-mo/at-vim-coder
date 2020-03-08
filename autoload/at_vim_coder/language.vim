@@ -27,6 +27,11 @@ function! at_vim_coder#language#init()
         \    'compile_command': 'go build -o ./bin/{task_id} {task_id}.go',
         \    'exe': ['./bin/{task_id}']
         \  },
+        \  'Python2 (2.7.6)': {
+        \    'extension': '.py',
+        \    'compile_command': '',
+        \    'exe': [substitute(python2_path, "\n", '', ''), './{task_id}.py']
+        \  }
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
         \    'compile_command': '',

@@ -342,7 +342,13 @@ function! at_vim_coder#contest#test(...)
 	let test_info = {}
 	let test_info['task_id'] = task_id
 	let test_info['command'] = at_vim_coder#language#get_exe(task_id)
-	let task_info = get(s:tasks[t:contest_id][task_id], 'sample_input', s:create_task_info(t:contest_id, task_id))
+	try
+		let task_info = get(s:tasks[t:contest_id][task_id], 'sample_input', s:create_task_info(t:contest_id, task_id))
+	catch /^avc_python_err$/
+		call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#test()')
+		call at_vim_coder#utils#echo_err_msg('Running test aborted')
+		return
+	endtry
 	let test_info['sample_input'] = task_info['sample_input']
 	let test_info['sample_output'] = task_info['sample_output']
 	let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
@@ -444,10 +450,16 @@ function! s:create_contest_status(task_id)
 	" insert blank line
 	call add(contest_status, '')
 
-	let task_info = get(s:tasks[t:contest_id][a:task_id], 'sample_input', s:create_task_info(t:contest_id, a:task_id))
+	try
+		let task_info = get(s:tasks[t:contest_id][a:task_id], 'sample_input', s:create_task_info(t:contest_id, a:task_id))
+	catch /^avc_python_err$/
+		call add(contest_status, 'Failed to get sample IO')
+		return contest_status
+	endtry
 	let sample_input = task_info['sample_input']
 	let sample_output = task_info['sample_output']
 	let i = 0
+	let let
 	while i < len(sample_input)
 		call add(contest_status, 'Sample Input '. string(i+1))
 		for line in sample_input[i]

@@ -4,8 +4,14 @@ set cpo&vim
 " based on https://language-test-201603.contest.atcoder.jp/
 
 function! at_vim_coder#language#init()
-  let python2_path = system('which python')
-  let python3_path = system('which python3')
+  if has('win32') || has('win64')
+    let python2_path = trim(system('where python'))
+    let python3_path = trim(system('where python3'))
+  else
+    let python2_path = trim(system('which python'))
+    let python3_path = trim(system('which python3'))
+  endif
+
   let s:language = {
         \  'C++14 (GCC 5.4.1)': {
         \    'extension': '.cpp',
@@ -30,12 +36,12 @@ function! at_vim_coder#language#init()
         \  'Python2 (2.7.6)': {
         \    'extension': '.py',
         \    'compile_command': '',
-        \    'exe': [substitute(python2_path, "\n", '', ''), './{task_id}.py']
+        \    'exe': [python2_path, './{task_id}.py']
         \  },
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
         \    'compile_command': '',
-        \    'exe': [substitute(python3_path, "\n", '', ''), './{task_id}.py']
+        \    'exe': [python3_path, './{task_id}.py']
         \  }
         \}
 endfunction

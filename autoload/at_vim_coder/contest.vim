@@ -184,7 +184,7 @@ function! s:load_template(new_file)
     %d
     execute 'write ' . a:new_file
   else
-    execute 'edit ' . g:at_vim_coder_template_file
+    execute 'edit ' . expand(g:at_vim_coder_template_file)
     execute 'file ' . a:new_file
     execute 'write ' . a:new_file
   endif

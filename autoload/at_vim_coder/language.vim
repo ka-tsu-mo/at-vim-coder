@@ -5,11 +5,9 @@ set cpo&vim
 
 function! at_vim_coder#language#init()
   if has('win32') || has('win64')
-    let python2_path = trim(system('where python'))
-    let python3_path = trim(system('where python3'))
+    let python3 = get(g:, 'python3_host_prog', trim(system('where python')))
   else
-    let python2_path = trim(system('which python'))
-    let python3_path = trim(system('which python3'))
+    let python3 = get(g:, 'python3_host_prog', trim(system('which python')))
   endif
 
   let s:language = {
@@ -18,30 +16,15 @@ function! at_vim_coder#language#init()
         \    'compile_command': 'g++ -std=gnu++1y -O2 -I/opt/boost/gcc/include -L/opt/boost/gcc/lib -o ./bin/{task_id} {task_id}.cpp',
         \    'exe': ['./bin/{task_id}']
         \  },
-        \  'C (GCC 5.4.1)': {
-        \    'extension': '.c',
-        \    'compile_command': 'gcc -std=gnu11 -O2 -o ./bin/{task_id} {task_id}.c -lm',
-        \    'exe': ['./bin/{task_id}']
-        \  },
-        \  'C (Clang 3.8.0)': {
-        \    'extension': '.c',
-        \    'compile_command': 'clang -O2 {task_id}.c -o ./bin/{task_id} -lm',
-        \    'exe': ['./bin/{task_id}']
-        \  },
         \  'Go (1.6)': {
         \    'extension': '.go',
         \    'compile_command': 'go build -o ./bin/{task_id} {task_id}.go',
         \    'exe': ['./bin/{task_id}']
         \  },
-        \  'Python2 (2.7.6)': {
-        \    'extension': '.py',
-        \    'compile_command': '',
-        \    'exe': [python2_path, './{task_id}.py']
-        \  },
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
         \    'compile_command': '',
-        \    'exe': [python3_path, './{task_id}.py']
+        \    'exe': [python3, './{task_id}.py']
         \  }
         \}
 endfunction

@@ -7,7 +7,7 @@ function! at_vim_coder#buffer#get_task_id()
 endfunction
 
 function! at_vim_coder#buffer#init_task_list(contest_id)
-  execute 'tcd ' . g:at_vim_coder_workspace
+  execute 'tcd ' . expand(g:at_vim_coder_workspace)
   if tabpagenr('$') == 1 && bufnr('$') == 1 && bufname('%') == ''
     execute 'file ' . a:contest_id . '_task_list'
   else

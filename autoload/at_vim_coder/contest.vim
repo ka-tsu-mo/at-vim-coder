@@ -45,12 +45,13 @@ function! s:create_task_info(contest_id, task_id)
 endfunction
 
 function! s:check_workspace(contest_id)
-  if !isdirectory(g:at_vim_coder_workspace)
+  let workspace = expand(g:at_vim_coder_workspace)
+  if !isdirectory(workspace)
     call at_vim_coder#utils#echo_err_msg('Can''t find directory(' . g:at_vim_coder_workspace . ')')
     throw 'avc_workspace_err'
   endif
   let current_dir = getcwd()
-  execute 'lcd ' . g:at_vim_coder_workspace
+  execute 'lcd ' . workspace
   let result = isdirectory(a:contest_id)
   execute 'lcd ' . current_dir
   return result
@@ -58,7 +59,7 @@ endfunction
 
 function! s:create_workspace(contest_id)
   let current_dir = getcwd()
-  execute 'lcd ' . g:at_vim_coder_workspace
+  execute 'lcd ' . expand(g:at_vim_coder_workspace)
   call mkdir(a:contest_id)
   execute 'lcd ' . current_dir
 endfunction

@@ -23,5 +23,13 @@ function! at_vim_coder#utils#echo_warning(msg, ...)
   echohl None
 endfunction
 
+function! at_vim_coder#utils#path_builder(paths)
+py3 << EOF
+path = os.path.join(*vim.eval('a:paths'))
+vim.command(f'let path = "{path}"')
+EOF
+return path
+endfunction
+
 let &cpo = s:save_cpo
 unlet s:save_cpo

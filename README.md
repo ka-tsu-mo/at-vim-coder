@@ -72,4 +72,4 @@ Also, you can map 3 actions by configuring like:
 nmap <silent> ;c <Plug>(at-vim-coder-check-status)
 nmap <silent> ;t <Plug>(at-vim-coder-run-test)
 nmap <silent> ;s <Plug>(at-vim-coder-submit)
-```}
+```

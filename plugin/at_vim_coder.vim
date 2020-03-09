@@ -8,8 +8,8 @@ let g:loaded_at_vim_coder = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-command! -nargs=+ Avc call <SID>At_Vim_Coder(<f-args>)
-function! s:At_Vim_Coder(...)
+command! -nargs=+ AtVimCoder call <SID>AtVimCoder(<f-args>)
+function! s:AtVimCoder(...)
   if a:0 == 1
     if a:1 ==# 'login'
       call at_vim_coder#login()

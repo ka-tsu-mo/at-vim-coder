@@ -160,19 +160,34 @@ function! at_vim_coder#contest#solve_task(task_id) abort
   call at_vim_coder#buffer#display_task(task_info)
   let current_task_source_code = current_task_id . at_vim_coder#language#get_extension()
   let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
-  if current_task_id == ''
-    let current_task_source_code = new_task_source_code
-  endif
   call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
+  if current_task_id == ''
+    " delete unnecessary buffer created by this function (first time)
+    execute 'bwipeout ' . bufnr(current_task_source_code)
+  endif
 
   if filereadable(new_task_source_code)
     execute 'edit ' . new_task_source_code
   else
-    call at_vim_coder#buffer#load_template(new_task_id)
+    call s:load_template(new_task_source_code)
   endif
+
   setlocal nobuflisted
   call at_vim_coder#buffer#minimize_task_list()
   let t:task_id = new_task_id
+
+endfunction
+
+function! s:load_template(new_file)
+  if g:at_vim_coder_template_file == ''
+    execute 'file ' . a:new_file
+    %d
+    execute 'write ' . a:new_file
+  else
+    execute 'edit ' . g:at_vim_coder_template_file
+    execute 'file ' . a:new_file
+    execute 'write ' . a:new_file
+  endif
 endfunction
 
 function! s:get_cookies()

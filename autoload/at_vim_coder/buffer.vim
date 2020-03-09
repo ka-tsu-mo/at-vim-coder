@@ -61,19 +61,6 @@ function! at_vim_coder#buffer#focus_win(buf_name, cmd)
   endif
 endfunction
 
-function! at_vim_coder#buffer#load_template(task_id)
-  let new_file = a:task_id . at_vim_coder#language#get_extension()
-  if g:at_vim_coder_template_file == ''
-    execute 'file ' . new_file
-    %d
-    execute 'write ' . new_file
-  else
-    execute 'edit ' . g:at_vim_coder_template_file
-    execute 'file ' . new_file
-    execute 'write ' . new_file
-  endif
-endfunction
-
 function! at_vim_coder#buffer#minimize_task_list()
   let task_list_buf_name = t:contest_id . '_task_list'
   let winnr = bufwinnr(task_list_buf_name)

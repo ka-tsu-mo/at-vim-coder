@@ -51,13 +51,6 @@ class AVCTexHandler:
 					if tex_expression[0].search(var_tag.text):
 						var_tag.string = tex_expression[0].sub(tex_expression[1], var_tag.text)
 
-	def test(self, text):
-		if not self._exclude_pattern.match(text):
-			for tex_expression in self._conv_table:
-				if tex_expression[0].search(text):
-					text = tex_expression[0].sub(tex_expression[1], text)
-		print(text)
-
 	def _frac_to_slash(self, matchobj):
 		text = matchobj.group(0)
 		table = str.maketrans('{}', '()')
@@ -100,7 +93,3 @@ class AVCTexHandler:
 	def _caret_to_superscript(self, matchobj):
 		original_text = matchobj.group(0)
 		return original_text.translate(self._superscript_table)
-
-if __name__=='__main__':
-	handler = AVC_tex_handler()
-	handler.test(r'\sqrt{\frac{{{}{3}{5}}')

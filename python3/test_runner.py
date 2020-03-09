@@ -11,7 +11,6 @@ def run_test(test_info):
 	sample_output_list = task_info['sample_output']
 	for i in range(len(sample_input_list)):
 		sample_input = '\n'.join(sample_input_list[i])
-		sample_output = '\n'.join(sample_output_list[i]['value'])
 		test_result = {}
 		try:
 			completed_process = subprocess.run(command, input=sample_input, text=True, capture_output=True, timeout=2)
@@ -20,13 +19,15 @@ def run_test(test_info):
 			test_result['stdout'] = ''
 			test_result['stderr'] = ''
 		else:
-			test_result['stdout'] = completed_process.stdout.replace('\r\n', '').replace('\n', '')
-			test_result['stderr'] = completed_process.stderr
-			if test_result['stdout'] == sample_output:
+			stdout = completed_process.stdout.replace('\r\n', '\n')
+			stderr = completed_process.stderr.replace('\r\n', '\n')
+			test_result['stdout'] = stdout.split('\n')
+			test_result['stderr'] = stderr.split('\n')
+			if test_result['stdout'][:-1] == sample_output_list[i]['value']:
 				test_result['status'] = 'AC'
 			else:
 				test_result['status'] = 'WA'
-		print(test_result)
+		print(json.dumps(test_result))
 
 if __name__=='__main__':
 	test_info = json.load(sys.stdin)

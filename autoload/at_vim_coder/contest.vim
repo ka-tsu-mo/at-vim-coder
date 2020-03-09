@@ -283,7 +283,7 @@ function! at_vim_coder#contest#submit(...)
         \ 'language': g:at_vim_coder_language,
         \ 'source_code': [getcwd(), source_code]
         \}
-  let submit_py = g:at_vim_coder_repo_dir . '/python3/submitter.py'
+  let submit_py = at_vim_coder#utils#path_builder([g:at_vim_coder_repo_dir, 'python3', 'submitter.py'])
   if has('nvim')
     let job = jobstart('python3 ' . submit_py, {
           \'on_stdout': function('s:submit_result_handler_nvim'),
@@ -374,7 +374,7 @@ function! at_vim_coder#contest#test(...)
   endtry
   let test_info['sample_input'] = task_info['sample_input']
   let test_info['sample_output'] = task_info['sample_output']
-  let test_py = g:at_vim_coder_repo_dir . '/python3/test_runner.py'
+  let test_py = at_vim_coder#utils#path_builder([g:at_vim_coder_repo_dir, 'python3', 'test_runner.py'])
   if has('nvim')
     let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
     call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
@@ -393,7 +393,6 @@ function! s:test_result_handler_nvim(channel, data, name)
   let test_result_list = []
   let task_id = a:data[0]
   for test_result in a:data[1:-2]
-    let test_result = substitute(test_result, "'", "\"", "g")
     call add(test_result_list, json_decode(test_result))
   endfor
   execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
@@ -407,7 +406,6 @@ function! s:test_result_handler_vim8(channel)
     if i == 0
       let task_id = ch_read(a:channel)
     else
-      let test_result = substitute(ch_read(a:channel), "'", "\"", "g")
       call add(test_result_list, json_decode(test_result))
     endif
     let i += 1
@@ -500,10 +498,11 @@ function! s:create_contest_status(task_id)
       let test_result_status = test_result[i]['status']
       call add(contest_status, 'Test Result ' . string(i+1) . ': ' . test_result_status)
       if test_result_status == 'WA'
-        call add(contest_status, 'stdout')
-        call add(contest_status, test_result[i]['stdout'])
-        call add(contest_status, 'stderr')
-        call add(contest_status, test_result[i]['stderr'])
+        call add(contest_status, '[stdout]')
+        call extend(contest_status, test_result[i]['stdout'])
+        call add(contest_status, '')
+        call add(contest_status, '[stderr]')
+        call extend(contest_status, test_result[i]['stderr'])
       endif
     else
       call add(contest_status, 'Test Result ' . string(i+1) . ': NONE')

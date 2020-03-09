@@ -4,12 +4,6 @@ set cpo&vim
 " based on https://language-test-201603.contest.atcoder.jp/
 
 function! at_vim_coder#language#init()
-  if has('win32') || has('win64')
-    let python3 = get(g:, 'python3_host_prog', trim(system('where python')))
-  else
-    let python3 = get(g:, 'python3_host_prog', trim(system('which python')))
-  endif
-
   let s:language = {
         \  'C++14 (GCC 5.4.1)': {
         \    'extension': '.cpp',
@@ -24,7 +18,7 @@ function! at_vim_coder#language#init()
         \  'Python3 (3.4.3)': {
         \    'extension': '.py',
         \    'compile_command': '',
-        \    'exe': [python3, './{task_id}.py']
+        \    'exe': [g:at_vim_coder_process_runner, './{task_id}.py']
         \  }
         \}
 endfunction

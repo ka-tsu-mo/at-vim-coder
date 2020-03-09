@@ -12,6 +12,13 @@ let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
 let g:at_vim_coder_template_file = get(g:, 'at_vim_coder_template_file', '')
 let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++14 (GCC 5.4.1)')
 let g:at_vim_coder_save_cookies = get(g:, 'at_vim_coder_save_cookies', 1)
+if has('win32') || has('win64')
+  let g:at_vim_coder_process_runner = get(g:, 'g:at_vim_coder_process_runner',
+        \get(g:, 'python3_host_prog', trim(system('where python'))))
+else
+  let g:at_vim_coder_process_runner = get(g:, 'g:at_vim_coder_process_runner',
+        \get(g:, 'python3_host_prog', trim(system('which python'))))
+endif
 let g:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')
 
 call at_vim_coder#language#init()

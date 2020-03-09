@@ -285,14 +285,14 @@ function! at_vim_coder#contest#submit(...)
         \}
   let submit_py = at_vim_coder#utils#path_builder([g:at_vim_coder_repo_dir, 'python3', 'submitter.py'])
   if has('nvim')
-    let job = jobstart('python3 ' . submit_py, {
+    let job = jobstart(g:at_vim_coder_process_runner . ' ' . submit_py, {
           \'on_stdout': function('s:submit_result_handler_nvim'),
           \'stdout_buffered': v:true})
     call at_vim_coder#utils#echo_message('Submitting... '. '[' . task_id . ']')
     call chansend(job, json_encode(submit_info))
     call chanclose(job, 'stdin')
   else
-    let job = job_start('python3 '. submit_py, {'close_cb': function('s:submit_result_handler_vim8')})
+    let job = job_start(g:at_vim_coder_process_runner . ' ' . submit_py, {'close_cb': function('s:submit_result_handler_vim8')})
     let channel = job_getchannel(job)
     call at_vim_coder#utils#echo_message('Submitting... '. '[' . task_id . ']')
     call ch_sendraw(channel, json_encode(submit_info))
@@ -376,12 +376,12 @@ function! at_vim_coder#contest#test(...)
   let test_info['sample_output'] = task_info['sample_output']
   let test_py = at_vim_coder#utils#path_builder([g:at_vim_coder_repo_dir, 'python3', 'test_runner.py'])
   if has('nvim')
-    let job = jobstart('python3 ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
+    let job = jobstart(g:at_vim_coder_process_runner . ' ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})
     call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
     call chansend(job, json_encode(test_info))
     call chanclose(job, 'stdin')
   else
-    let job = job_start('python3 '. test_py, {'close_cb': function('s:test_result_handler_vim8')})
+    let job = job_start(g:at_vim_coder_process_runner . ' ' . test_py, {'close_cb': function('s:test_result_handler_vim8')})
     let channel = job_getchannel(job)
     call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
     call ch_sendraw(channel, json_encode(test_info))

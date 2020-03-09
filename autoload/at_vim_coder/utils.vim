@@ -26,7 +26,7 @@ endfunction
 function! at_vim_coder#utils#path_builder(paths)
 py3 << EOF
 path = os.path.join(*vim.eval('a:paths'))
-vim.command(f'let path = "{path}"')
+vim.command(f'let path = {repr(path)}')
 EOF
 return path
 endfunction

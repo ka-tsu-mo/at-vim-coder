@@ -406,6 +406,7 @@ function! s:test_result_handler_vim8(channel)
     if i == 0
       let task_id = ch_read(a:channel)
     else
+      let test_result = ch_read(a:channel)
       call add(test_result_list, json_decode(test_result))
     endif
     let i += 1

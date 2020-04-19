@@ -38,8 +38,9 @@ let g:at_vim_coder_workspace = 'path/to/workspace'
 let g:at_vim_coder_template_file = 'path/to/template_file'
 
 " language to participate (currently only 3 languages are available)
-" Please set to 'C++14 (5.4.1)', 'Go (1.6)' or 'Python3 (3.4.3)'
-" based on https://language-test-201603.contest.atcoder.jp/
+" If you want to solve problem abc162 or later, please set to 'C++ (9.2.1)', 'Go (1.14.1)' or 'Python (3.8.2)'
+" if else, please set to 'C++14 (5.4.1)', 'Go (1.6)' or 'Python3 (3.4.3)'
+" based on [Language Test](https://language-test-201603.contest.atcoder.jp/) and [Language Test 202001](https://atcoder.jp/contests/language-test-202001/)
 let g:at_vim_coder_language = 'C++14 (5.4.1)' " default
 
 " if 1, save session cookies to local (if logout, delete this cookies)

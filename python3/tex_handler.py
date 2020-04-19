@@ -6,6 +6,7 @@ class AVCTexHandler:
 				(re.compile(r'\\frac\{.+\}'), self._frac_to_slash),
 				(re.compile(r'_\{[0-9aeijoruvx+-=()]+\}|_[0-9aeijoruvx+-=()]'), self._underscore_to_subscript),
 				(re.compile(r'\^\{[0-9aeijoruvx+-=()]+\}|\^[0-9aeijoruvx+-=()]'), self._caret_to_superscript),
+				(re.compile(r'\\mbox\{.+?\}'), self._mbox_to_text),
 				(re.compile(r'\\sqrt'), '√'),
 				(re.compile(r'\\pm'), '±'),
 				(re.compile(r'\\div'), '÷'),
@@ -93,3 +94,7 @@ class AVCTexHandler:
 	def _caret_to_superscript(self, matchobj):
 		original_text = matchobj.group(0)
 		return original_text.translate(self._superscript_table)
+
+	def _mbox_to_text(self, matchobj):
+		mbox_text = re.search(r'\{.+\}', matchobj.group(0))
+		return mbox_text.group(0)[1:-1]

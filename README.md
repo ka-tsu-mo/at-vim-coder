@@ -14,7 +14,7 @@ Be contestant of AtCoder on Vim8/Neovim
 
 ## Usage
 ```vim
-" Login to AtCoder. It's necessary to submit code.
+" Login to AtCoder. It's necessary for submitting code.
 AtVimCoder login
 
 " Logout from AtCoder.
@@ -26,7 +26,7 @@ AtVimCoder status
 " Participate contest specified by contest ID( and solve task if task ID specified)
 " e.g. AtVimCoder abc111 or AtVimCoder abc111:A
 AtVimCoder {contest ID}
-AtVimCoder {contest ID:{task ID}
+AtVimCoder {contest ID}:{task ID}
 ```
 
 ## Option variables
@@ -69,7 +69,7 @@ let g:at_vim_coder_process_runner = 'path/to/python3'
 ```vim
 <Plug>(at-vim-coder-check-status)  :<C-u>call at_vim_coder#contest#check_status()<CR>
 <Plug>(at-vim-coder-run-test)      :<C-u>call at_vim_coder#contest#test()<CR>
-<Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#subimt()<CR>
+<Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#submit()<CR>
 ```
 
 on {contest ID}_task_list buffer, above 3 actions are mapped by following key

@@ -14,7 +14,7 @@ Be contestant of AtCoder on Vim8/Neovim
 
 ## Usage
 ```vim
-" Login to AtCoder. It's necessary to submit code.
+" Login to AtCoder. It's necessary for submitting code.
 AtVimCoder login
 
 " Logout from AtCoder.
@@ -26,7 +26,7 @@ AtVimCoder status
 " Participate contest specified by contest ID( and solve task if task ID specified)
 " e.g. AtVimCoder abc111 or AtVimCoder abc111:A
 AtVimCoder {contest ID}
-AtVimCoder {contest ID:{task ID}
+AtVimCoder {contest ID}:{task ID}
 ```
 
 ## Option variables
@@ -44,11 +44,10 @@ let g:at_vim_coder_template_file = 'path/to/template_file'
 ### g:at_vim_coder_language
 language to participate (currently only 3 languages are available)
 
-If you want to solve problem abc162 or later, please set to 'C++ (9.2.1)', 'Go (1.14.1)' or 'Python (3.8.2)'.
-if else, please set to 'C++14 (5.4.1)', 'Go (1.6)' or 'Python3 (3.4.3)'.
-These languages are based on [Language Test](https://language-test-201603.contest.atcoder.jp/) and [Language Test 202001](https://atcoder.jp/contests/language-test-202001/)
+Please set to 'C++ (9.2.1)', 'Go (1.14.1)' or 'Python (3.8.2)'.
+These languages are based on [Language Test 202001](https://atcoder.jp/contests/language-test-202001/)
 ```vim
-let g:at_vim_coder_language = 'C++14 (5.4.1)' " default
+let g:at_vim_coder_language = 'C++ (9.2.1)' " default
 ```
 
 ### g:at_vim_coder_save_cookies
@@ -70,7 +69,7 @@ let g:at_vim_coder_process_runner = 'path/to/python3'
 ```vim
 <Plug>(at-vim-coder-check-status)  :<C-u>call at_vim_coder#contest#check_status()<CR>
 <Plug>(at-vim-coder-run-test)      :<C-u>call at_vim_coder#contest#test()<CR>
-<Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#subimt()<CR>
+<Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#submit()<CR>
 ```
 
 on {contest ID}_task_list buffer, above 3 actions are mapped by following key

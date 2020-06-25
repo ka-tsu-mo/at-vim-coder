@@ -26,7 +26,7 @@ function! s:AtVimCoder(...)
 endfunction
 
 nnoremap <silent> <Plug>(at-vim-coder-run-test)      :<C-u>call at_vim_coder#contest#test()<CR>
-nnoremap <silent> <Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#subimt()<CR>
+nnoremap <silent> <Plug>(at-vim-coder-submit)        :<C-u>call at_vim_coder#contest#submit()<CR>
 nnoremap <silent> <Plug>(at-vim-coder-check-status)  :<C-u>call at_vim_coder#contest#check_status()<CR>
 
 let &cpo = s:save_cpo

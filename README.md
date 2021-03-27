@@ -8,6 +8,9 @@ Be contestant of AtCoder on Vim8/Neovim
   - tested with
     - version 8.2.250 (macOS 10.15.3)
     - version 8.2.259 (Windows 10)
+- python3 modules
+  - bs4
+  - requests
 
 ## Demo
 ![atvimcoder_demo](https://user-images.githubusercontent.com/46083154/76198792-0d585100-6232-11ea-9e8b-e89e5531983a.gif)

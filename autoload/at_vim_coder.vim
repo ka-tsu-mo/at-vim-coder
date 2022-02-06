@@ -12,6 +12,7 @@ let g:at_vim_coder_workspace = get(g:, 'at_vim_coder_workspace', getcwd())
 let g:at_vim_coder_template_file = get(g:, 'at_vim_coder_template_file', '')
 let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++ (GCC 9.2.1)')
 let g:at_vim_coder_save_cookies = get(g:, 'at_vim_coder_save_cookies', 1)
+let g:at_vim_coder_locale = get(g:, 'at_vim_coder_locale', expand($LANG))
 if has('win32') || has('win64')
   let g:at_vim_coder_process_runner = get(g:, 'g:at_vim_coder_process_runner',
         \get(g:, 'python3_host_prog', trim(system('where python'))))

@@ -3,11 +3,10 @@ Be contestant of AtCoder on Vim8/Neovim
 
 ## Requirements
 - Neovim with python3 and floating window
-  - tested with NVIM v0.4.3 (macOS 10.15.3)
 - vim8 with python3 and popup
-  - tested with
-    - version 8.2.250 (macOS 10.15.3)
-    - version 8.2.259 (Windows 10)
+- python3 modules
+  - Beautiful Soup 4
+  - requests
 
 ## Demo
 ![atvimcoder_demo](https://user-images.githubusercontent.com/46083154/76198792-0d585100-6232-11ea-9e8b-e89e5531983a.gif)
@@ -44,10 +43,10 @@ let g:at_vim_coder_template_file = 'path/to/template_file'
 ### g:at_vim_coder_language
 language to participate (currently only 3 languages are available)
 
-Please set to 'C++ (9.2.1)', 'Go (1.14.1)' or 'Python (3.8.2)'.
+Please set to 'C++ (GCC 9.2.1)', 'Go (1.14.1)' or 'Python (3.8.2)'.
 These languages are based on [Language Test 202001](https://atcoder.jp/contests/language-test-202001/)
 ```vim
-let g:at_vim_coder_language = 'C++ (9.2.1)' " default
+let g:at_vim_coder_language = 'C++ (GCC 9.2.1)' " default
 ```
 
 ### g:at_vim_coder_save_cookies
@@ -63,6 +62,12 @@ so you must let plugin know path to python3.
 if not set, get g:python3_host_prog, and g:python3_host_prog is not set, get from command `where python | which python`.
 ```vim
 let g:at_vim_coder_process_runner = 'path/to/python3'
+```
+
+### g:at_vim_coder_locale
+Please set to 'en' or 'ja'. If not set, get $LANG and use the firt two characters.
+```vim
+let g:at_vim_coder_locale = 'ja'
 ```
 
 ## Command

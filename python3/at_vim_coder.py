@@ -3,7 +3,6 @@ import requests
 from requests.exceptions import ConnectionError, HTTPError, Timeout
 import pickle
 import vim
-import sys
 import os
 import re
 import tex_handler
@@ -15,7 +14,11 @@ class AtVimCoder:
     def __init__(self):
         self._session = requests.Session()
         self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
-        self._locale = vim.eval('$LANG')
+        locale = vim.eval('g:at_vim_coder_locale')
+        if locale[:2] == "ja":
+            self._locale = "ja"
+        else:
+            self._locale = "en"
         self._tex_handler = tex_handler.AVCTexHandler()
         if os.path.exists(self._cookies_path):
             with open(self._cookies_path, 'rb') as f:
@@ -33,7 +36,6 @@ class AtVimCoder:
         else:
             bs_get_resp = BeautifulSoup(response.text, 'html.parser')
             return bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
-
 
     def _save_cookies(self):
         with open(self._cookies_path, 'wb') as f:
@@ -58,8 +60,6 @@ class AtVimCoder:
                 vim.command('let logout_success = 1')
             else:
                 vim.command('let logout_success = 0')
-
-
 
     def login(self, name, password, save_cookies):
         try:
@@ -118,7 +118,7 @@ class AtVimCoder:
                 vim.command(f'let l:created_task_list= {task_list}')
 
     def _download_task_list(self, contest_id):
-        url = AT_CODER_BASE_URL + '/contests/' + contest_id + '/tasks'
+        url = AT_CODER_BASE_URL + '/contests/' + contest_id + f'/tasks?lang={self._locale}'
         try:
             response = self._session.get(url, timeout=3.0)
         except (ConnectionError, HTTPError, Timeout):
@@ -131,7 +131,7 @@ class AtVimCoder:
 
     def _get_section_title_by_language(self):
         section_titles = {}
-        if self._locale[:2] == 'ja':
+        if self._locale == 'ja':
             section_titles['sample_input'] = '入力例'
             section_titles['sample_output'] = '出力例'
         else:
@@ -184,7 +184,7 @@ class AtVimCoder:
             raise
         else:
             bs_task_soup = BeautifulSoup(response.text, 'html.parser')
-            if self._locale[:2] == 'ja':
+            if self._locale == 'ja':
                 span = bs_task_soup.find('span', attrs={'class': 'lang-ja'})
             else:
                 span = bs_task_soup.find('span', attrs={'class': 'lang-en'})

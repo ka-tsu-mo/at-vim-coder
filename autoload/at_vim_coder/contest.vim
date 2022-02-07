@@ -243,7 +243,7 @@ function! at_vim_coder#contest#submit(...)
   endif
   let source_code = task_id . g:at_vim_coder#language#get_extension()
   if !filereadable(source_code)
-    call at_vim_coder#utils#echo_message('SourceCode was not found')
+    call at_vim_coder#utils#echo_message('Source code was not found')
     return
   endif
   try
@@ -293,7 +293,7 @@ function! at_vim_coder#contest#submit(...)
     call chansend(job, json_encode(submit_info))
     call chanclose(job, 'stdin')
   else
-    let job = job_start(g:at_vim_coder_process_runner . ' ' . submit_py, {'close_cb': function('s:submit_result_handler_vim8')})
+    let job = job_start(g:at_vim_coder_process_runner . ' ' . submit_py, {'callback': function('s:submit_result_handler_vim8'), 'mode': 'raw'})
     let channel = job_getchannel(job)
     call at_vim_coder#utils#echo_message('Submitting... '. '[' . task_id . ']')
     call ch_sendraw(channel, json_encode(submit_info))
@@ -302,10 +302,12 @@ function! at_vim_coder#contest#submit(...)
 endfunction
 
 function! s:submit_result_handler_nvim(channel, data, name)
-  let task_id = a:data[0]
-  let submit_result = a:data[1]
-  if submit_result == -1
-    call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
+  let job_result = json_decode(a:data[0])  "json string (a:data[1] is '' which means 'EOF')
+  let task_id = job_result['task_id']
+  let submit_result = job_result['result']
+  if submit_result != 'success'
+    let message = 'Faild to submit [' . task_id . '] (caused by: ' . submit_result . ')'
+    call at_vim_coder#utils#echo_err_msg(message)
   else
     call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
     let task_screen_name = s:get_task_screen_name(task_id)
@@ -318,18 +320,13 @@ function! s:submit_result_handler_nvim(channel, data, name)
   endif
 endfunction
 
-function! s:submit_result_handler_vim8(channel)
-  let i = 0
-  while ch_status(a:channel, {'part': 'out'}) == 'buffered'
-    if i == 0
-      let task_id = ch_read(a:channel)
-    else
-      let submit_result = ch_read(a:channel)
-    endif
-    let i += 1
-  endwhile
-  if submit_result == -1
-    call at_vim_coder#utils#echo_message('Faild to submit [' . task_id . ']')
+function! s:submit_result_handler_vim8(channel, msg)
+  let job_result = json_decode(a:msg)
+  let task_id = job_result["task_id"]
+  let submit_result = job_result["result"]
+  if submit_result != 'success'
+    let message = 'Faild to submit [' . task_id . '] (caused by: ' . submit_result . ')'
+    call at_vim_coder#utils#echo_err_msg(message)
   else
     call at_vim_coder#utils#echo_message('Succeeded to submit [' . task_id . ']')
     let task_screen_name = s:get_task_screen_name(task_id)
@@ -340,6 +337,7 @@ function! s:submit_result_handler_vim8(channel)
     endif
     call add(s:tasks[t:contest_id][task_id]['submissions'], latest_submission)
   endif
+  call ch_close(a:channel)
 endfunction
 
 function! at_vim_coder#contest#test(...)
@@ -350,7 +348,7 @@ function! at_vim_coder#contest#test(...)
   endif
   let file_name = task_id . g:at_vim_coder#language#get_extension()
   if !filereadable(file_name)
-    call at_vim_coder#utils#echo_message('SourceCode was not found')
+    call at_vim_coder#utils#echo_message('Source code was not found')
     return
   endif
   if at_vim_coder#language#needs_compile()

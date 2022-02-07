@@ -7,9 +7,6 @@ import pickle
 import json
 
 def submit_code(submit_info):
-    task_id = submit_info.pop('task_id')
-    print(task_id)
-
     session = requests.Session()
     cookies = submit_info.pop('cookies')
     # set cookies
@@ -27,12 +24,15 @@ def submit_code(submit_info):
     # get csrf token
     try:
         response = session.get(submit_url, timeout=3.0)
-    except (ConnectionError, HTTPError, Timeout):
-        print(-1)
+    except (ConnectionError, HTTPError, Timeout) as e:
+        return str(e)
     else:
-        bs_get_resp = BeautifulSoup(response.text, 'lxml')
-        csrf_token = bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+        bs_get_resp = BeautifulSoup(response.text, 'html.parser')
+        csrf_token_attr = bs_get_resp.find(attrs={'name': 'csrf_token'})
+        if csrf_token_attr is None:
+            return 'Failed to get CSRF token.'
 
+    csrf_token = csrf_token_attr.get('value')
     task_screen_name = submit_info.pop('task_screen_name')
 
     # get language id
@@ -43,8 +43,7 @@ def submit_code(submit_info):
         if option.text == language:
             language_id = option.get('value')
     if language_id == '':
-        print(-1)
-        return
+        return 'Failed to get language id on submit page.'
 
     source_code_path_list = submit_info.pop('source_code')
     source_code_path = os.path.join(*source_code_path_list)
@@ -60,15 +59,19 @@ def submit_code(submit_info):
 
     try:
         submit_result = session.post(submit_url, data=submit_data, timeout=3.0)
-    except (ConnectionError, HTTPError, Timeout):
-        print(-1)
+    except (ConnectionError, HTTPError, Timeout) as e:
+        return str(e)
+    if submit_result.status_code != 200:
+        return f"Error on submit(status code: {submit_result.status_code})"
     else:
-        if submit_result.status_code != 200:
-            print(-1)
-        else:
-            print(0)
+        return "success"
 
 if __name__=='__main__':
     submit_info = json.load(sys.stdin)
-    submit_code(submit_info)
-    sys.exit()
+    task_id = submit_info.pop('task_id')
+    result = submit_code(submit_info)
+    print(json.dumps({
+        'task_id': task_id,
+        'result': result
+    }))
+    sys.exit(0)

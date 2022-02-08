@@ -322,8 +322,8 @@ endfunction
 
 function! s:submit_result_handler_vim8(channel, msg)
   let job_result = json_decode(a:msg)
-  let task_id = job_result["task_id"]
-  let submit_result = job_result["result"]
+  let task_id = job_result['task_id']
+  let submit_result = job_result['result']
   if submit_result != 'success'
     let message = 'Faild to submit [' . task_id . '] (caused by: ' . submit_result . ')'
     call at_vim_coder#utils#echo_err_msg(message)
@@ -380,7 +380,7 @@ function! at_vim_coder#contest#test(...)
     call chansend(job, json_encode(test_info))
     call chanclose(job, 'stdin')
   else
-    let job = job_start(g:at_vim_coder_process_runner . ' ' . test_py, {'close_cb': function('s:test_result_handler_vim8')})
+    let job = job_start(g:at_vim_coder_process_runner . ' ' . test_py, {'callback': function('s:test_result_handler_vim8'), 'mode': 'raw'})
     let channel = job_getchannel(job)
     call at_vim_coder#utils#echo_message('Testing... '. '[' . task_id . ']')
     call ch_sendraw(channel, json_encode(test_info))
@@ -389,29 +389,18 @@ function! at_vim_coder#contest#test(...)
 endfunction
 
 function! s:test_result_handler_nvim(channel, data, name)
-  let test_result_list = []
-  let task_id = a:data[0]
-  for test_result in a:data[1:-2]
-    call add(test_result_list, json_decode(test_result))
-  endfor
-  execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
+  let job_result = json_decode(a:data[0])
+  let task_id = job_result['task_id']
+  execute 'let t:'. task_id . '_test_result = ' string(job_result['result_list'])
   call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
 endfunction
 
-function! s:test_result_handler_vim8(channel)
-  let test_result_list = []
-  let i = 0
-  while ch_status(a:channel, {'part': 'out'}) == 'buffered'
-    if i == 0
-      let task_id = ch_read(a:channel)
-    else
-      let test_result = ch_read(a:channel)
-      call add(test_result_list, json_decode(test_result))
-    endif
-    let i += 1
-  endwhile
-  execute 'let t:'. task_id . '_test_result = ' string(test_result_list)
+function! s:test_result_handler_vim8(channel, msg)
+  let job_result = json_decode(a:msg)
+  let task_id = job_result['task_id']
+  execute 'let t:'. task_id . '_test_result = ' string(job_result['result_list'])
   call at_vim_coder#utils#echo_message('Test Completed ' . '[' . task_id . ']')
+  call ch_close(a:channel)
 endfunction
 
 function! at_vim_coder#contest#check_status(...)

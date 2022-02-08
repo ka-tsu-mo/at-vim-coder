@@ -9,7 +9,8 @@ Be contestant of AtCoder on Vim8/Neovim
   - requests
 
 ## Demo
-![atvimcoder_demo](https://user-images.githubusercontent.com/46083154/76198792-0d585100-6232-11ea-9e8b-e89e5531983a.gif)
+<!-- ![atvimcoder_demo](https://user-images.githubusercontent.com/46083154/76198792-0d585100-6232-11ea-9e8b-e89e5531983a.gif) -->
+![atvimcoder_demo](https://user-images.githubusercontent.com/46083154/153001913-451fc402-c39b-4e38-8186-5627959f99c5.gif)
 
 ## Usage
 ```vim

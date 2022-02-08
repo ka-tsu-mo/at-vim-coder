@@ -3,12 +3,11 @@ import sys
 import json
 
 def run_test(test_info):
-    task_id = test_info.pop('task_id')
-    print(task_id)
     command = test_info.pop('command')
     task_info = test_info
     sample_input_list = task_info['sample_input']
     sample_output_list = task_info['sample_output']
+    test_results = []
     for i in range(len(sample_input_list)):
         sample_input = '\n'.join(sample_input_list[i])
         test_result = {}
@@ -27,9 +26,15 @@ def run_test(test_info):
                 test_result['status'] = 'AC'
             else:
                 test_result['status'] = 'WA'
-        print(json.dumps(test_result))
+        test_results.append(test_result)
+    return test_results
 
 if __name__=='__main__':
     test_info = json.load(sys.stdin)
-    run_test(test_info)
-    sys.exit()
+    task_id = test_info.pop('task_id')
+    result = run_test(test_info)
+    print(json.dumps({
+        'task_id': task_id,
+        'result_list': result
+    }))
+    sys.exit(0)

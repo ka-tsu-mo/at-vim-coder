@@ -99,12 +99,13 @@ function! at_vim_coder#buffer#display_task_list(task_list) abort
 endfunction
 
 function! at_vim_coder#buffer#create_status_buf(contest_status)
+  let buf_name = t:contest_id . '_status'
   if has('nvim')
-    let buf_name = t:contest_id . '_status'
     if bufexists(buf_name)
       let buf = bufnr(buf_name)
     else
       let buf = nvim_create_buf(v:false, v:true)
+      call nvim_buf_set_name(buf, buf_name)
     endif
     call nvim_buf_set_option(buf, 'modifiable', v:true)
     call nvim_buf_set_lines(buf, 0, -1, v:true, a:contest_status)

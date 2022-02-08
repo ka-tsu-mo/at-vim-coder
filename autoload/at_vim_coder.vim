@@ -14,10 +14,10 @@ let g:at_vim_coder_language = get(g:, 'at_vim_coder_language', 'C++ (GCC 9.2.1)'
 let g:at_vim_coder_save_cookies = get(g:, 'at_vim_coder_save_cookies', 1)
 let g:at_vim_coder_locale = get(g:, 'at_vim_coder_locale', expand($LANG))
 if has('win32') || has('win64')
-  let g:at_vim_coder_process_runner = get(g:, 'g:at_vim_coder_process_runner',
+  let g:at_vim_coder_process_runner = get(g:, 'at_vim_coder_process_runner',
         \get(g:, 'python3_host_prog', trim(system('where python'))))
 else
-  let g:at_vim_coder_process_runner = get(g:, 'g:at_vim_coder_process_runner',
+  let g:at_vim_coder_process_runner = get(g:, 'at_vim_coder_process_runner',
         \get(g:, 'python3_host_prog', trim(system('which python'))))
 endif
 let g:at_vim_coder_repo_dir = expand('<sfile>:p:h:h')

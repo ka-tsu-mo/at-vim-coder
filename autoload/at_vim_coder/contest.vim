@@ -41,6 +41,9 @@ function! s:create_task_info(contest_id, task_id)
     call at_vim_coder#utils#echo_err_msg('Failed to create task info', err)
     throw 'avc_python_err'
   endif
+  for key in keys(task_info)
+    let s:tasks[a:contest_id][a:task_id][key] = task_info[key]
+  endfor
   return task_info
 endfunction
 
@@ -149,16 +152,17 @@ function! at_vim_coder#contest#solve_task(task_id) abort
   endif
 
   try
-    let task_info = get(
-          \s:tasks[t:contest_id][new_task_id],
-          \'problem_info',
-          \s:create_task_info(t:contest_id, new_task_id)
-          \)
+    let task_info = s:tasks[t:contest_id][new_task_id]
+    if has_key(task_info, 'problem_info')
+      let problem_info = task_info['problem_info']
+    else
+      let problem_info = s:create_task_info(t:contest_id, new_task_id)['problem_info']
+    endif
   catch /^avc_python_err$/
     call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#solve_task')
     return
   endtry
-  call at_vim_coder#buffer#display_task(task_info)
+  call at_vim_coder#buffer#display_task(problem_info)
   let current_task_source_code = current_task_id . at_vim_coder#language#get_extension()
   let new_task_source_code = new_task_id . at_vim_coder#language#get_extension()
   call at_vim_coder#buffer#focus_win(current_task_source_code, 'vnew')
@@ -176,7 +180,6 @@ function! at_vim_coder#contest#solve_task(task_id) abort
   setlocal nobuflisted
   call at_vim_coder#buffer#minimize_task_list()
   let t:task_id = new_task_id
-
 endfunction
 
 function! s:load_template(new_file)
@@ -218,10 +221,12 @@ endfunction
 
 function! s:check_submission(task_id)
   try
-    let submissions = get(
-          \s:tasks[t:contest_id][a:task_id],
-          \'submissions',
-          \s:create_submissions_list(a:task_id))
+    let task_info = s:tasks[t:contest_id][a:task_id]
+    if has_key(task_info, 'submissions')
+      let submissions = task_info['submissions']
+    else
+      let submissions = s:create_submissions_list(a:task_id)
+    endif
   catch /^avc_python_err$/
     throw 'avc_python_err'
   endtry
@@ -439,7 +444,11 @@ function! s:create_contest_status(task_id)
 
   " submission status
   try
-    let submissions = get(s:tasks[t:contest_id][a:task_id], 'submissions', s:create_submissions_list(a:task_id))
+    if has_key(s:tasks[t:contest_id][a:task_id], 'submissions')
+      let submissions = s:tasks[t:contest_id][a:task_id]['submissions']
+    else
+      let submissions = s:create_submissions_list(a:task_id)
+    endif
   catch /^avc_python_err$/
     let submissions = [{'status': 'ERROR[at-vim-coder]'}]
   endtry
@@ -467,7 +476,11 @@ function! s:create_contest_status(task_id)
 
   " test status
   try
-    let task_info = get(s:tasks[t:contest_id][a:task_id], 'sample_input', s:create_task_info(t:contest_id, a:task_id))
+    if has_key(s:tasks[t:contest_id][a:task_id], 'sample_input')
+      let task_info = s:tasks[t:contest_id][a:task_id]
+    else
+      let task_info = s:create_task_info(t:contest_id, a:task_id)
+    endif
   catch /^avc_python_err$/
     call add(contest_status, 'Failed to get sample IO')
     return contest_status

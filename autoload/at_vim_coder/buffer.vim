@@ -69,12 +69,12 @@ function! at_vim_coder#buffer#minimize_task_list()
   endif
 endfunction
 
-function! at_vim_coder#buffer#display_task(task_info) abort
+function! at_vim_coder#buffer#display_task(problem_info) abort
   call at_vim_coder#buffer#focus_win(t:contest_id . '_problem', 'new')
   call s:unset_buffer_local_options()
   %d
   let index = 1
-  for line in a:task_info['problem_info']
+  for line in a:problem_info
     if line[0] == '['
       call append(line('$'), '')
       let index += 1

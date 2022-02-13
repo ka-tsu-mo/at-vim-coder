@@ -60,6 +60,7 @@ class AtVimCoder:
             vim.command(f'let err = "{e_str}"')
         else:
             if response.status_code == 302:
+                self._logged_in = False
                 vim.command('let logout_success = 1')
             else:
                 vim.command('let logout_success = 0')

@@ -99,7 +99,7 @@ function! s:confirm_login()
     try
       call at_vim_coder#login()
     catch /^avc_python_err$/
-      call at_vim_coder#utils#echo_err_msg('contest.vim/s:confirm_login()')
+      call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest.vim:confirm_login()')
       return -1
     endtry
     return 1
@@ -112,17 +112,17 @@ function! s:prepare_for_contest(contest_id)
   try
     let ready_for_contest = s:check_workspace(a:contest_id)
   catch /^avc_workspace_err$/
-    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#prepare_for_contest()')
+    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest.vim:prepare_for_contest()')
     call at_vim_coder#utils#echo_err_msg('Please create workspace')
     return v:false
   endtry
   if !ready_for_contest
-    call s:create_workspace(contest_id)
+    call s:create_workspace(a:contest_id)
   endif
   try
     let logged_in = at_vim_coder#check_login()
   catch /^avc_python_err$/
-    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#participate()')
+    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest.vim:prepare_for_contest()')
     return v:false
   endtry
   if !logged_in
@@ -176,7 +176,7 @@ function! at_vim_coder#contest#solve_task(task_id) abort
       let problem_info = s:create_task_info(t:contest_id, new_task_id)['problem_info']
     endif
   catch /^avc_python_err$/
-    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#solve_task')
+    call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#solve_task()')
     return
   endtry
   call at_vim_coder#buffer#display_task(problem_info)

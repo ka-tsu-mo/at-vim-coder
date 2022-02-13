@@ -13,6 +13,7 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 class AtVimCoder:
     def __init__(self):
         self._session = requests.Session()
+        self._csrf_token = None
         self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
         locale = vim.eval('g:at_vim_coder_locale')
         if locale[:2] == "ja":
@@ -29,13 +30,15 @@ class AtVimCoder:
         vim.command(f'let l:cookies = {cookies}')
 
     def _get_csrf_token(self):
-        try:
-            response = self._session.get(AT_CODER_LOGIN_URL, timeout=3.0)
-        except (ConnectionError, HTTPError, Timeout):
-            raise
-        else:
-            bs_get_resp = BeautifulSoup(response.text, 'html.parser')
-            return bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+        if self._csrf_token is None:
+            try:
+                response = self._session.get(AT_CODER_LOGIN_URL, timeout=3.0)
+            except (ConnectionError, HTTPError, Timeout):
+                raise
+            else:
+                bs_get_resp = BeautifulSoup(response.text, 'html.parser')
+                self._csrf_token =  bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+        return self._csrf_token
 
     def _save_cookies(self):
         with open(self._cookies_path, 'wb') as f:
@@ -57,6 +60,7 @@ class AtVimCoder:
             vim.command(f'let err = "{e_str}"')
         else:
             if response.status_code == 302:
+                self._logged_in = False
                 vim.command('let logout_success = 1')
             else:
                 vim.command('let logout_success = 0')
@@ -82,7 +86,6 @@ class AtVimCoder:
             else:
                 vim.command('let l:login_success = 0')
 
-
     def check_login(self):
         url = AT_CODER_BASE_URL + '/settings'
         try:
@@ -96,6 +99,28 @@ class AtVimCoder:
             else:
                 vim.command('let l:logged_in = 1')
 
+    def check_contest_availability(self, contest_id):
+        url = AT_CODER_BASE_URL + f'/contests/{contest_id}?lang=en'
+        try:
+            response = self._session.get(url, timeout=3.0)
+        except (ConnectionError, HTTPError, Timeout) as e:
+            e_str = str(e)
+            vim.command(f'let err = "{e_str}"')
+        else:
+            if response.status_code == 404:
+                vim.command('let l:contest_status = "not found"')
+                return
+            bs = BeautifulSoup(response.text, 'html.parser')
+            p_box = bs.find(attrs={'class': 'insert-participant-box'})
+            if p_box is None:
+                vim.command('let err = "Failed to parse contest page"')
+                return
+            text = p_box.get_text()
+            if "Virtual Participation" in text:
+                vim.command('let l:contest_status = "available"')
+            else:
+                duration = bs.find('time', attrs={'class': 'fixtime-full'}).get_text()
+                vim.command(f'let l:contest_status = "{duration}"')
 
     def create_task_list(self, contest_id):
         try:
@@ -262,4 +287,3 @@ class AtVimCoder:
                 return None
             else:
                 return bs_submissions_resp.tbody
-

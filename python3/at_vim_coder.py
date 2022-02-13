@@ -13,6 +13,7 @@ AT_CODER_LOGIN_URL = AT_CODER_BASE_URL + '/login'
 class AtVimCoder:
     def __init__(self):
         self._session = requests.Session()
+        self._csrf_token = None
         self._cookies_path = os.path.join(vim.eval('g:at_vim_coder_repo_dir'), 'cookies')
         locale = vim.eval('g:at_vim_coder_locale')
         if locale[:2] == "ja":
@@ -29,13 +30,15 @@ class AtVimCoder:
         vim.command(f'let l:cookies = {cookies}')
 
     def _get_csrf_token(self):
-        try:
-            response = self._session.get(AT_CODER_LOGIN_URL, timeout=3.0)
-        except (ConnectionError, HTTPError, Timeout):
-            raise
-        else:
-            bs_get_resp = BeautifulSoup(response.text, 'html.parser')
-            return bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+        if self._csrf_token is None:
+            try:
+                response = self._session.get(AT_CODER_LOGIN_URL, timeout=3.0)
+            except (ConnectionError, HTTPError, Timeout):
+                raise
+            else:
+                bs_get_resp = BeautifulSoup(response.text, 'html.parser')
+                self._csrf_token =  bs_get_resp.find(attrs={'name': 'csrf_token'}).get('value')
+        return self._csrf_token
 
     def _save_cookies(self):
         with open(self._cookies_path, 'wb') as f:
@@ -81,7 +84,6 @@ class AtVimCoder:
                 vim.command('let l:login_success = 1')
             else:
                 vim.command('let l:login_success = 0')
-
 
     def check_login(self):
         url = AT_CODER_BASE_URL + '/settings'
@@ -262,4 +264,3 @@ class AtVimCoder:
                 return None
             else:
                 return bs_submissions_resp.tbody
-

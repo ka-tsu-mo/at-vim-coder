@@ -109,31 +109,22 @@ function! at_vim_coder#logout()
   endif
 endfunction
 
-function! s:prepare_for_contest(contest_id)
-  " {contest_id} or {contest_id:task_id} e.g. abc123 or abc123:A
-  let contest_to_participate = split(a:contest_id, ':')
-  if len(contest_to_participate) >= 3
-    call at_vim_coder#utils#echo_message('Invalid Contest ID')
-    return []
-  endif
-  try
-    let created_task_list = at_vim_coder#contest#create_task_list(contest_to_participate[0])
-  catch /^avc_python_err$/
-    return []
-  endtry
-  if empty(created_task_list)
-    call at_vim_coder#utils#echo_message('Contest was not found')
-    return []
-  endif
-  return contest_to_participate
-endfunction
-
-function! at_vim_coder#participate(contest_id)
-  let contest_to_participate = s:prepare_for_contest(a:contest_id)
-  if contest_to_participate == []
+function! at_vim_coder#participate(contest_specifier) abort
+  let contest_specifier = split(a:contest_specifier, ':')
+  if len(contest_specifier) >= 3
+    call at_vim_coder#utils#echo_err_msg('Invalid contest specifier')
     return
   endif
-  call at_vim_coder#contest#participate(contest_to_participate)
+  let contest_status = at_vim_coder#contest#check_availability(contest_specifier[0])
+  if contest_status == 'not found'
+    call at_vim_coder#utils#echo_err_msg(contest_specifier[0] . ' was not found')
+  elseif contest_status == 'available'
+    call at_vim_coder#contest#participate(contest_specifier)
+  else
+    let msg = contest_specifier[0] . ' will be held on ' . contest_status . '.'
+    let msg .= "If you wan't to register for it, please see it on browser."
+    call at_vim_coder#utils#echo_message(msg)
+  endif
 endfunction
 
 let &cpo = s:save_cpo

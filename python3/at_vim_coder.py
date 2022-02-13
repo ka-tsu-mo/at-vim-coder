@@ -99,6 +99,28 @@ class AtVimCoder:
             else:
                 vim.command('let l:logged_in = 1')
 
+    def check_contest_availability(self, contest_id):
+        url = AT_CODER_BASE_URL + f'/contests/{contest_id}?lang=en'
+        try:
+            response = self._session.get(url, timeout=3.0)
+        except (ConnectionError, HTTPError, Timeout) as e:
+            e_str = str(e)
+            vim.command(f'let err = "{e_str}"')
+        else:
+            if response.status_code == 404:
+                vim.command('let l:contest_status = "not found"')
+                return
+            bs = BeautifulSoup(response.text, 'html.parser')
+            p_box = bs.find(attrs={'class': 'insert-participant-box'})
+            if p_box is None:
+                vim.command('let err = "Failed to parse contest page"')
+                return
+            text = p_box.get_text()
+            if "Virtual Participation" in text:
+                vim.command('let l:contest_status = "available"')
+            else:
+                duration = bs.find('time', attrs={'class': 'fixtime-full'}).get_text()
+                vim.command(f'let l:contest_status = "{duration}"')
 
     def create_task_list(self, contest_id):
         try:

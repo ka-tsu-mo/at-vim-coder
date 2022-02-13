@@ -121,7 +121,7 @@ function! at_vim_coder#participate(contest_specifier) abort
   elseif contest_status == 'available'
     call at_vim_coder#contest#participate(contest_specifier)
   else
-    let msg = contest_specifier[0] . ' will be held on ' . contest_status . '.'
+    let msg = contest_specifier[0] . ' will be held on ' . contest_status . '. '
     let msg .= "If you wan't to register for it, please see it on browser."
     call at_vim_coder#utils#echo_message(msg)
   endif

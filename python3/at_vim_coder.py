@@ -116,11 +116,11 @@ class AtVimCoder:
                 vim.command('let err = "Failed to parse contest page"')
                 return
             text = p_box.get_text()
-            if "Virtual Participation" in text:
-                vim.command('let l:contest_status = "available"')
-            else:
+            if "Register" in text:
                 duration = bs.find('time', attrs={'class': 'fixtime-full'}).get_text()
                 vim.command(f'let l:contest_status = "{duration}"')
+            else:
+                vim.command('let l:contest_status = "available"')
 
     def create_task_list(self, contest_id):
         try:

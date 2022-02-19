@@ -387,14 +387,23 @@ function! at_vim_coder#contest#test(...)
   let test_info['task_id'] = task_id
   let test_info['command'] = at_vim_coder#language#get_exe(task_id)
   try
-    let task_info = get(s:tasks[t:contest_id][task_id], 'sample_input', s:create_task_info(t:contest_id, task_id))
+    if has_key(s:tasks[t:contest_id][task_id], 'sample_input')
+      let task_info = s:tasks[t:contest_id][task_id]
+    else
+      let task_info = s:create_task_info(t:contest_id, task_id)
+    endif
   catch /^avc_python_err$/
     call at_vim_coder#utils#echo_err_msg('@at_vim_coder#contest#test()')
     call at_vim_coder#utils#echo_err_msg('Running test aborted')
     return
   endtry
   let test_info['sample_input'] = task_info['sample_input']
-  let test_info['sample_output'] = task_info['sample_output']
+  let sample_output = task_info['sample_output']
+  let sample_output_values = []
+  for item in sample_output
+    call add(sample_output_values, item['value'])
+  endfor
+  let test_info['sample_output'] = sample_output_values
   let test_py = at_vim_coder#utils#path_builder([g:at_vim_coder_repo_dir, 'python3', 'test_runner.py'])
   if has('nvim')
     let job = jobstart(g:at_vim_coder_process_runner . ' ' . test_py, {'on_stdout': function('s:test_result_handler_nvim'), 'stdout_buffered': v:true})

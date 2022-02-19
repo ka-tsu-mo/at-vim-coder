@@ -22,7 +22,7 @@ def run_test(test_info):
             stderr = completed_process.stderr.replace('\r\n', '\n')
             test_result['stdout'] = stdout.split('\n')
             test_result['stderr'] = stderr.split('\n')
-            if test_result['stdout'][:-1] == sample_output_list[i]['value']:
+            if test_result['stdout'][:-1] == sample_output_list[i]:
                 test_result['status'] = 'AC'
             else:
                 test_result['status'] = 'WA'
